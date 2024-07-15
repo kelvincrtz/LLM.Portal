@@ -43,7 +43,7 @@
               <h3 class="font-medium">{{ assistant.name }}</h3>
               <p class="text-sm text-gray-600">ID: {{ assistant.id }}</p>
             </div>
-            <p class="text-sm text-gray-600 mb-2">{{ assistant.description }}</p>
+            <p class="text-sm text-gray-600 mb-2">{{ assistant.instructions }}</p>
             <div>
               <button @click="editAssistant(index)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
               <button @click="deleteAssistant(index)" class="text-red-600 hover:text-red-900">Delete</button>
@@ -60,6 +60,7 @@
   
   <script>
   import AssistantsPagination from './Pagination.vue'; // Adjust path as necessary
+  import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
 
   export default {
     components: {
@@ -93,54 +94,75 @@
         return Math.ceil(this.assistants.length / this.pageSize);
       }
     },
+    async created() {
+      // Fetch assistants data from the service on component creation
+      await this.fetchAssistants();
+    },
     methods: {
-      submitForm() {
-        if (this.editingIndex === -1) {
-          // Create new assistant
+      async fetchAssistants() {
+      try {
+        this.assistants = await AssistantService.getAllAssistants();
+        } catch (error) {
+          console.error('Error fetching assistants:', error);
+        }
+      },
+
+      async submitForm() {
+        try {
           const newAssistant = {
-            id: this.assistants.length + 1,
             name: this.form.name,
             description: this.form.description,
             file: this.form.file // Adjust as per your actual file handling logic
           };
-          this.assistants.push(newAssistant);
+          await AssistantService.createAssistant(newAssistant);
           this.clearForm();
-        } else {
-          // Update existing assistant
-          this.assistants[this.editingIndex].name = this.form.name;
-          this.assistants[this.editingIndex].description = this.form.description;
-          this.editingIndex = -1; // Reset editing index
-        }
-        this.clearForm();
-      },
-      editAssistant(index) {
-        // Set form values for editing
-        this.form.name = this.assistants[index].name;
-        this.form.description = this.assistants[index].description;
-        this.editingIndex = index;
-        // You can also populate form.file if needed
-      },
-      deleteAssistant(index) {
-        // Delete assistant
-        this.assistants.splice(index, 1);
-        if (this.editingIndex === index) {
-            this.clearForm();
+          await this.fetchAssistants(); // Refresh the list after creating a new assistant
+        } catch (error) {
+          console.error('Error creating assistant:', error);
         }
       },
+
+      async editAssistant(index) {
+        try {
+          const id = this.assistants[index].id;
+          const updatedAssistant = {
+            name: this.form.name,
+            description: this.form.description,
+            file: this.form.file // Adjust as per your actual file handling logic
+          };
+          await AssistantService.updateAssistant(id, updatedAssistant);
+          this.clearForm();
+          await this.fetchAssistants(); // Refresh the list after updating an assistant
+        } catch (error) {
+          console.error('Error updating assistant:', error);
+        }
+      },
+
+      async deleteAssistant(index) {
+        try {
+          const id = this.assistants[index].id;
+          await AssistantService.deleteAssistant(id);
+          this.assistants.splice(index, 1);
+        } catch (error) {
+          console.error('Error deleting assistant:', error);
+        }
+      },
+
       clearForm() {
         // Clear form fields
         this.form.name = '';
         this.form.description = '';
         this.form.file = null;
         this.editingIndex = -1;
-        this.$refs.fileInput.value = ''; // Clear file input field
+        // Reset file input if needed
       },
+
       handleFileChange(event) {
         // Handle file change event
         this.form.file = event.target.files[0];
       },
+
       gotoPage(page) {
-        // Set currentPage to selected page
         this.currentPage = page;
       }
     }

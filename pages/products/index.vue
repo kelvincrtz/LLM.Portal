@@ -18,9 +18,9 @@
     const { data: products } = await useFetch('https://fakestoreapi.com/products')
     
     useHead({
-        title: 'Open AI | Merch',
+        title: 'LLM | Merch',
         meta: [
-            { name : 'description', content: 'Open AI Merchy'}
+            { name : 'description', content: 'LLM Merchy'}
         ]
     })
 </script>

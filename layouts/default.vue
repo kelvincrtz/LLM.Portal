@@ -2,7 +2,7 @@
     <div>
         <header class="shadow-sm bg-white">
             <nav class="container mx-auto p-4 flex justify-between">
-                <NuxtLink to ="/" class="font-bold">Open AI Portal Demo</NuxtLink>
+                <NuxtLink to ="/" class="font-bold">LLM Portal Demo</NuxtLink>
                 <ul class="flex gap-4">
                     <li><NuxtLink to="/">Chatbox</NuxtLink></li>
                     <li><NuxtLink to="/about">Assistant Management</NuxtLink></li>

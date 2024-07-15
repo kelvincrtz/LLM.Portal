@@ -16,7 +16,7 @@
   </template>
   
   <script>
-  import chatGPTService from '@/services/chatGPTService';
+  import chatGPTService from '~/services/CompletionService';
   
   export default {
     data() {

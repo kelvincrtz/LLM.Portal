@@ -2,7 +2,7 @@
     <div>
         <header class="shadow-sm bg-white">
             <nav class="container mx-auto p-4">
-                <NuxtLink to ="/products" class="font-bold">Open AI Portal Demo Merch</NuxtLink>
+                <NuxtLink to ="/products" class="font-bold">LLM Portal Demo Merch</NuxtLink>
             </nav>
         </header>
 
