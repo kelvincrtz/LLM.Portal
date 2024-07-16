@@ -1,59 +1,50 @@
 <!-- AssistantView.vue -->
 <template>
-    <div class="container mx-auto p-4">
-      <h1 class="text-2xl font-bold mb-4">Assistant Management</h1>
-  
-      <!-- Form for creating or updating assistants -->
-      <form @submit.prevent="submitForm">
-        <div class="mb-4">
-          <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-          <input v-model="form.name" type="text" id="name" name="name"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-        </div>
-  
-        <div class="mb-4">
-          <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea v-model="form.description" id="description" name="description" rows="3"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
-        </div>
+    <div class="p-4">
+    <h1 class="text-2xl font-bold mb-4">Persona Management</h1>
 
-        <div class="mb-4">
-          <label for="file" class="block text-sm font-medium text-gray-700">Upload File</label>
-          <input type="file" id="file" ref="fileInput" @change="handleFileChange"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-        </div>
-  
-        <div>
-          <button type="submit"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Save
-          </button>
-        </div>
-      </form>
-  
-      <!-- Display existing assistants -->
-      <div class="mt-8">
-        <h2 class="text-xl font-bold mb-4">Assistants List</h2>
-  
-     <!-- Paginated List -->
-     <ul>
-        <li v-for="(assistant, index) in paginatedAssistants" :key="assistant.id" class="mb-2">
-          <div class="flex justify-between items-center bg-white shadow-md rounded-md p-4">
-            <div class="flex justify-between items-center mb-2">
-              <h3 class="font-medium">{{ assistant.name }}</h3>
-              <p class="text-sm text-gray-600">ID: {{ assistant.id }}</p>
-            </div>
-            <p class="text-sm text-gray-600 mb-2">{{ assistant.instructions }}</p>
-            <div>
-              <button @click="editAssistant(index)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
-              <button @click="deleteAssistant(index)" class="text-red-600 hover:text-red-900">Delete</button>
-            </div>
+    <div class="flex flex-col lg:flex-row lg:space-x-4">
+      <div class="flex-1 mb-4 lg:mb-0">
+        <h2 class="text-xl font-semibold mb-2">Add/Edit Persona</h2>
+        <form @submit.prevent="editingIndex === -1 ? submitForm() : editAssistant(editingIndex)" class="space-y-4">
+          <div>
+            <label class="block mb-2 font-medium">Name</label>
+            <input v-model="form.name" type="text" class="w-full p-2 border border-gray-300 rounded" required />
           </div>
-        </li>
-      </ul>
+          <div>
+            <label class="block mb-2 font-medium">Description</label>
+            <textarea v-model="form.description" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
+          </div>
+          <div>
+            <label class="block mb-2 font-medium">Instructions</label>
+            <textarea v-model="form.instructions" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
+          </div>
+          <div>
+            <label class="block mb-2 font-medium">File</label>
+            <input type="file" @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
+          </div>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            {{ editingIndex === -1 ? 'Add Assistant' : 'Update Assistant' }}
+          </button>
+        </form>
+      </div>
 
-      <!-- Pagination Controls using Pagination component -->
-      <Pagination v-if="totalPages > 1" :currentPage="currentPage" :totalPages="totalPages" @page-changed="gotoPage" />
+      <div class="flex-1">
+        <h2 class="text-xl font-semibold mb-2">Persona List</h2>
+        <ul>
+          <li v-for="(assistant, index) in paginatedAssistants" :key="assistant.id" class="mb-4 p-4 border border-gray-300 rounded bg-white shadow">
+            <h3 class="text-lg font-semibold">{{ assistant.name }}</h3>
+            <p class="text-sm text-gray-500">ID : {{ assistant.id }}</p>
+            <p>{{ assistant.description }}</p>
+            <p class="text-sm text-gray-500">{{ assistant.instructions }}</p>
+            <div class="mt-2 space-x-2">
+              <button @click="editAssistant(index)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Edit</button>
+              <button @click="deleteAssistant(index)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Delete</button>
+            </div>
+          </li>
+        </ul>
+        <Pagination :total-pages="totalPages" :current-page="currentPage" @page-changed="gotoPage" />
+      </div>
     </div>
   </div>
 </template>
@@ -74,8 +65,8 @@
           file: null
         },
         assistants: [
-          { id: 1, name: 'Assistant 1', description: 'Description of Assistant 1' },
-          { id: 2, name: 'Assistant 2', description: 'Description of Assistant 2' },
+          { id: 1, name: 'Assistant 1', instructions: 'Instructions for Assistant 1' },
+          { id: 2, name: 'Assistant 2', instructions: 'Instructions for Assistant 2' },
           // Initialize with sample data or fetch from API
         ],
         editingIndex: -1,
@@ -111,7 +102,7 @@
         try {
           const newAssistant = {
             name: this.form.name,
-            description: this.form.description,
+            instructions: this.form.instructions,
             file: this.form.file // Adjust as per your actual file handling logic
           };
           await AssistantService.createAssistant(newAssistant);
