@@ -12,12 +12,18 @@
             <input v-model="form.name" type="text" class="w-full p-2 border border-gray-300 rounded" required />
           </div>
           <div>
-            <label class="block mb-2 font-medium">Description</label>
-            <textarea v-model="form.description" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
-          </div>
-          <div>
             <label class="block mb-2 font-medium">Instructions</label>
             <textarea v-model="form.instructions" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
+          </div>
+          <div>
+            <label class="block mb-2 font-medium">Model</label>
+            <select v-model="form.model" class="w-full p-2 border border-gray-300 rounded" required>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4-turbo">GPT-4-turbo</option>
+              <option value="gpt-4">GPT-4</option>
+              <option value="gpt-3.5-turbo">GPT-3.5-turbo</option>
+              <!-- Add more models as necessary -->
+            </select>
           </div>
           <div>
             <label class="block mb-2 font-medium">File</label>
@@ -35,8 +41,13 @@
           <li v-for="(assistant, index) in paginatedAssistants" :key="assistant.id" class="mb-4 p-4 border border-gray-300 rounded bg-white shadow">
             <h3 class="text-lg font-semibold">{{ assistant.name }}</h3>
             <p class="text-sm text-gray-500">ID : {{ assistant.id }}</p>
-            <p>{{ assistant.description }}</p>
-            <p class="text-sm text-gray-500">{{ assistant.instructions }}</p>
+            <p>Model: {{ assistant.model }}</p>
+            <div v-if="isJSON(assistant.instructions)">
+              <pre v-html="formatJSON(assistant.instructions)"></pre>
+            </div>
+            <div v-else>
+              <p class="text-sm text-gray-500">Instructions: {{ assistant.instructions }}</p>
+            </div>
             <div class="mt-2 space-x-2">
               <button @click="editAssistant(index)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Edit</button>
               <button @click="deleteAssistant(index)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Delete</button>
@@ -61,16 +72,13 @@
       return {
         form: {
           name: '',
-          description: '',
+          instructions: '', // Add instructions field
+          model: 'gpt-4o', // Default value for model
           file: null
         },
-        assistants: [
-          { id: 1, name: 'Assistant 1', instructions: 'Instructions for Assistant 1' },
-          { id: 2, name: 'Assistant 2', instructions: 'Instructions for Assistant 2' },
-          // Initialize with sample data or fetch from API
-        ],
+        assistants: [],
         editingIndex: -1,
-        pageSize: 5, // Number of assistants per page
+        pageSize: 4, // Number of assistants per page
         currentPage: 1 // Current page
       };
     },
@@ -102,7 +110,8 @@
         try {
           const newAssistant = {
             name: this.form.name,
-            instructions: this.form.instructions,
+            instructions: this.form.instructions, // Include instructions
+            model: this.form.model, // Include model
             file: this.form.file // Adjust as per your actual file handling logic
           };
           await AssistantService.createAssistant(newAssistant);
@@ -118,7 +127,8 @@
           const id = this.assistants[index].id;
           const updatedAssistant = {
             name: this.form.name,
-            description: this.form.description,
+            instructions: this.form.instructions, // Include instructions
+            model: this.form.model, // Include model
             file: this.form.file // Adjust as per your actual file handling logic
           };
           await AssistantService.updateAssistant(id, updatedAssistant);
@@ -140,12 +150,11 @@
       },
 
       clearForm() {
-        // Clear form fields
         this.form.name = '';
-        this.form.description = '';
+        this.form.instructions = ''; // Clear instructions
+        this.form.model = 'gpt-4o'; // Reset model to default
         this.form.file = null;
         this.editingIndex = -1;
-        // Reset file input if needed
       },
 
       handleFileChange(event) {
@@ -155,6 +164,35 @@
 
       gotoPage(page) {
         this.currentPage = page;
+      },
+
+      isJSON(str) {
+        try {
+          JSON.parse(str);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      },
+      
+      formatJSON(str) {
+        return JSON.stringify(JSON.parse(str), null, 2);
+      },
+
+      formatInstructions(instructions) {
+        // Split the instructions by the JSON part
+        const regex = /(\{.*\})/s; // Regular expression to match the JSON part
+        const parts = instructions.split(regex);
+
+        return parts
+          .map(part => {
+            if (this.isJSON(part)) {
+              return `<pre>${JSON.stringify(JSON.parse(part), null, 2)}</pre>`;
+            } else {
+              return `<p>${part}</p>`;
+            }
+          })
+          .join('');
       }
     }
   };
