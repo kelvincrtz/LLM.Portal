@@ -1,9 +1,19 @@
-const BASE_URL = 'http://localhost:7100/api'; // Base URL of your local API TODO: Change this later
+// services/AssistantService.js
+let BASE_URL;
+
+function getBaseUrl() {
+  if (!BASE_URL) {
+    const config = useRuntimeConfig();
+    BASE_URL = config.public.baseUrl;
+  }
+  return BASE_URL;
+}
+
 
 export default {
   async getAllAssistants() {
     try {
-      const response = await $fetch(`${BASE_URL}/assistants`);
+      const response = await $fetch(`${getBaseUrl()}/assistants`);
       return response.data; // Assuming response.data is an array of assistants
     } catch (error) {
       console.error('Error fetching assistants:', error);
@@ -13,7 +23,7 @@ export default {
 
   async createAssistant(newAssistant) {
     try {
-      const response = await $fetch(`${BASE_URL}/assistants`, {
+      const response = await $fetch(`${getBaseUrl()}/assistants`, {
         method: 'POST',
         body: JSON.stringify(newAssistant),
         headers: {
@@ -29,7 +39,7 @@ export default {
 
   async updateAssistant(id, updatedAssistant) {
     try {
-      const response = await $fetch(`${BASE_URL}/assistants/${id}`, {
+      const response = await $fetch(`${getBaseUrl()}/assistants/${id}`, {
         method: 'PUT',
         body: JSON.stringify(updatedAssistant),
         headers: {
@@ -45,7 +55,7 @@ export default {
 
   async deleteAssistant(id) {
     try {
-      const response = await $fetch(`${BASE_URL}/assistants/${id}`, {
+      const response = await $fetch(`${getBaseUrl()}/assistants/${id}`, {
         method: 'DELETE'
       });
       return response.data; // Assuming response.data contains success/failure message
