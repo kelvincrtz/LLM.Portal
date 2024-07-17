@@ -49,13 +49,20 @@
               <p class="text-sm text-gray-500">Instructions: {{ assistant.instructions }}</p>
             </div>
             <div class="mt-2 space-x-2">
-              <button @click="editAssistant(index)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Edit</button>
-              <button @click="deleteAssistant(index)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Delete</button>
+
+              <button @click="editAssistant(index + (currentPage - 1) * pageSize)" class="bg-yellow-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-yellow-700">
+                Edit
+              </button>
+
+              <button @click="deleteAssistant(index + (currentPage - 1) * pageSize)" class="ml-2 bg-red-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-red-700">
+                Delete
+              </button>
             </div>
           </li>
         </ul>
         <Pagination :total-pages="totalPages" :current-page="currentPage" @page-changed="gotoPage" />
       </div>
+      
     </div>
   </div>
 </template>
@@ -85,8 +92,9 @@
     computed: {
       // Calculate paginated assistants based on currentPage and pageSize
       paginatedAssistants() {
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        return this.assistants.slice(startIndex, startIndex + this.pageSize);
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.assistants.slice(start, end);
       },
       // Calculate total number of pages
       totalPages() {
@@ -110,33 +118,32 @@
         try {
           const newAssistant = {
             name: this.form.name,
-            instructions: this.form.instructions, // Include instructions
-            model: this.form.model, // Include model
-            file: this.form.file // Adjust as per your actual file handling logic
+            instructions: this.form.instructions,
+            model: this.form.model,
+            file: this.form.file
           };
-          await AssistantService.createAssistant(newAssistant);
+
+          if (this.editingIndex === -1) {
+            await AssistantService.createAssistant(newAssistant);
+          } else {
+            const id = this.assistants[this.editingIndex].id;
+            await AssistantService.updateAssistant(id, newAssistant);
+          }
+
           this.clearForm();
-          await this.fetchAssistants(); // Refresh the list after creating a new assistant
+          await this.fetchAssistants();
         } catch (error) {
-          console.error('Error creating assistant:', error);
+          console.error('Error submitting form:', error);
         }
       },
 
       async editAssistant(index) {
-        try {
-          const id = this.assistants[index].id;
-          const updatedAssistant = {
-            name: this.form.name,
-            instructions: this.form.instructions, // Include instructions
-            model: this.form.model, // Include model
-            file: this.form.file // Adjust as per your actual file handling logic
-          };
-          await AssistantService.updateAssistant(id, updatedAssistant);
-          this.clearForm();
-          await this.fetchAssistants(); // Refresh the list after updating an assistant
-        } catch (error) {
-          console.error('Error updating assistant:', error);
-        }
+        const assistant = this.assistants[index];
+        this.form.name = assistant.name;
+        this.form.instructions = assistant.instructions;
+        this.form.model = assistant.model;
+        this.form.file = null; // Clear the file input
+        this.editingIndex = index;
       },
 
       async deleteAssistant(index) {
