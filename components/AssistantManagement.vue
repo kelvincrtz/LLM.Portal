@@ -56,14 +56,31 @@
             <h3 class="text-lg font-semibold">{{ assistant.name }}</h3>
             <p class="text-sm text-gray-500">ID : {{ assistant.id }}</p>
             <p>Model: {{ assistant.model }}</p>
+
             <div v-if="isJSON(assistant.instructions)">
               <pre v-html="formatJSON(assistant.instructions)"></pre>
             </div>
+
             <div v-else>
               <p class="text-sm text-gray-500">Instructions: {{ assistant.instructions }}</p>
             </div>
-            <div class="mt-2 space-x-2">
 
+            <!-- Files List -->
+            <div v-if="assistant.toolResources?.fileSearch?.vectorStoreIds?.length">
+              <h4 class="text-md font-medium mt-2">Files:</h4>
+              <ul class="list-disc pl-5 mt-1">
+                <li v-for="(fileId, fileIndex) in assistant.toolResources.fileSearch.vectorStoreIds" :key="fileIndex">
+                  <button @click="showModal(fileId)" class="text-sm text-gray-500 hover:underline">
+                    {{ fileId }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div v-else>
+              <p class="text-sm text-gray-500">No files associated</p>
+            </div>
+
+            <div class="mt-2 space-x-2">
               <button @click="editAssistant(index + (currentPage - 1) * pageSize)" class="bg-yellow-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-yellow-700">
                 Edit
               </button>
@@ -75,6 +92,9 @@
           </li>
         </ul>
         <Pagination :total-pages="totalPages" :current-page="currentPage" @page-changed="gotoPage" />
+
+        <!-- Modal Component -->
+        <Modal :fileId="selectedFileId" :isVisible="isModalVisible" @update:isVisible="isModalVisible = $event" />
       </div>
       
     </div>
@@ -85,10 +105,20 @@
   import AssistantsPagination from './Pagination.vue'; // Adjust path as necessary
   import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
   import FileService from '@/services/FileService';
+  import FileModal from '~/components/Modal.vue';
+
+  const isModalVisible = ref(false);
+  const selectedFileId = ref(null);
+
+  function showModal(fileId) {
+    selectedFileId.value = fileId;
+    isModalVisible.value = true;
+  }
 
   export default {
     components: {
-        AssistantsPagination
+        AssistantsPagination,
+        FileModal
     },
     data() {
       return {
@@ -98,6 +128,7 @@
           model: 'gpt-4o', // Default value for model
           file: null
         },
+
         assistants: [],
         editingIndex: -1,
         pageSize: 4, // Number of assistants per page
@@ -157,11 +188,9 @@
               };
             }
           }
-
-          if (uploadedFile) {
-            newAssistant.file = uploadedFile.id;
-          }
-          console.log('New assistant req', newAssistant);
+      
+          // TODO: for debugging only 
+          // console.log('New assistant req', newAssistant);
 
           if (this.editingIndex === -1) {
             console.log('Creating new assistant');
