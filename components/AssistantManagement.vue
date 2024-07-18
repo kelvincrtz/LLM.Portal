@@ -70,6 +70,7 @@
   <script>
   import AssistantsPagination from './Pagination.vue'; // Adjust path as necessary
   import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
+  import FileService from '@/services/FileService';
 
   export default {
     components: {
@@ -116,6 +117,14 @@
 
       async submitForm() {
         try {
+          let uploadedFile = null;
+
+          if (this.form.file) {
+            console.log('Uploading file');
+            uploadedFile = await FileService.uploadFile(this.form.file);
+            console.log('File uploaded:', uploadedFile);
+          }
+
           const newAssistant = {
             name: this.form.name,
             instructions: this.form.instructions,
