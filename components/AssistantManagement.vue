@@ -6,7 +6,7 @@
     <div class="flex flex-col lg:flex-row lg:space-x-4">
       <div class="flex-1 mb-4 lg:mb-0">
         <h2 class="text-xl font-semibold mb-2">Add/Edit Persona</h2>
-        <form @submit.prevent="editingIndex === -1 ? submitForm() : editAssistant(editingIndex)" class="space-y-4">
+        <form @submit.prevent="submitForm" class="space-y-4">
           <div>
             <label class="block mb-2 font-medium">Name</label>
             <input v-model="form.name" type="text" class="w-full p-2 border border-gray-300 rounded" required />
@@ -124,9 +124,12 @@
           };
 
           if (this.editingIndex === -1) {
+            console.log('Creating new assistant');
             await AssistantService.createAssistant(newAssistant);
           } else {
+            console.log('Editing existing assistant');
             const id = this.assistants[this.editingIndex].id;
+            console.log('Editing assistant ID:', id); // Log the ID
             await AssistantService.updateAssistant(id, newAssistant);
           }
 
@@ -138,6 +141,8 @@
       },
 
       async editAssistant(index) {
+        console.log('Editing index:', index); // Add this line to log the index
+        this.editingIndex = index;
         const assistant = this.assistants[index];
         this.form.name = assistant.name;
         this.form.instructions = assistant.instructions;
