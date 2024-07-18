@@ -7,14 +7,17 @@
       <div class="flex-1 mb-4 lg:mb-0">
         <h2 class="text-xl font-semibold mb-2">Add/Edit Persona</h2>
         <form @submit.prevent="submitForm" class="space-y-4">
+
           <div>
             <label class="block mb-2 font-medium">Name</label>
             <input v-model="form.name" type="text" class="w-full p-2 border border-gray-300 rounded" required />
           </div>
+
           <div>
             <label class="block mb-2 font-medium">Instructions</label>
             <textarea v-model="form.instructions" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
           </div>
+
           <div>
             <label class="block mb-2 font-medium">Model</label>
             <select v-model="form.model" class="w-full p-2 border border-gray-300 rounded" required>
@@ -25,13 +28,24 @@
               <!-- Add more models as necessary -->
             </select>
           </div>
+          
           <div>
             <label class="block mb-2 font-medium">File</label>
             <input type="file" @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
           </div>
+
+          <div>
+            <label class="block mb-2 font-medium">Tools</label>
+            <select v-model="form.tools" class="w-full p-2 border border-gray-300 rounded">
+              <option value="file_search">File Search</option>
+              <!-- Add more tools as necessary -->
+            </select>
+          </div>
+
           <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             {{ editingIndex === -1 ? 'Add Assistant' : 'Update Assistant' }}
           </button>
+
         </form>
       </div>
 
@@ -122,15 +136,32 @@
           if (this.form.file) {
             console.log('Uploading file');
             uploadedFile = await FileService.uploadFile(this.form.file);
-            console.log('File uploaded:', uploadedFile);
+            console.log('File', uploadedFile);
+            console.log('File uploaded');
           }
-
+          
+          // Create an assistant with file search tool and the vector id
           const newAssistant = {
             name: this.form.name,
             instructions: this.form.instructions,
-            model: this.form.model,
-            file: this.form.file
+            model: this.form.model
           };
+
+          if (this.form.tools) {
+            newAssistant.tools = [{ type: this.form.tools }];
+            if (this.form.tools === 'file_search' && uploadedFile.vectorStoreId) {
+              newAssistant.tool_resources = {
+                file_search: {
+                  vector_store_ids: uploadedFile.vectorStoreId.split(',').map(id => id.trim())
+                }
+              };
+            }
+          }
+
+          if (uploadedFile) {
+            newAssistant.file = uploadedFile.id;
+          }
+          console.log('New assistant req', newAssistant);
 
           if (this.editingIndex === -1) {
             console.log('Creating new assistant');

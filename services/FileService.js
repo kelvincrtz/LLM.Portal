@@ -25,7 +25,7 @@ export default {
         },
       });
 
-      return response.data; // Assuming response.data contains the newly created file
+      return response; // Assuming response.data contains the newly created file
     } catch (error) {
       console.error('Error uploading file:', error);
       throw error;
@@ -40,7 +40,7 @@ export default {
         },
       });
 
-      return response.data; // Assuming response.data is an array
+      return response; // Assuming response.data is an array
     } catch (error) {
       console.error('Error fetching file:', error);
       throw error;
@@ -55,7 +55,7 @@ export default {
         },
       });
 
-      return response.data; // Assuming response.data contains the file
+      return response; // Assuming response.data contains the file
     } catch (error) {
       console.error('Error fetching file:', error);
       throw error;
@@ -71,7 +71,7 @@ export default {
         },
       });
 
-      return response.data; // Assuming response.data contains success/failure message
+      return response; // Assuming response.data contains success/failure message
     } catch (error) {
       console.error('Error deleting file:', error);
       throw error;
