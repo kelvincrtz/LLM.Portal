@@ -67,7 +67,7 @@
 
             <!-- Files List -->
             <div v-if="assistant.toolResources?.fileSearch?.vectorStoreIds?.length">
-              <h4 class="text-md font-medium mt-2">Files:</h4>
+              <h4 class="text-md font-medium mt-2">Vector store:</h4>
               <ul class="list-disc pl-5 mt-1">
                 <li v-for="(fileId, fileIndex) in assistant.toolResources.fileSearch.vectorStoreIds" :key="fileIndex">
                   <button @click="showModal(fileId)" class="text-sm text-gray-500 hover:underline">
