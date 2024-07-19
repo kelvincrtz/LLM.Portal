@@ -30,8 +30,8 @@
           </div>
           
           <div>
-            <label class="block mb-2 font-medium">File</label>
-            <input type="file" @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
+            <label class="block mb-2 font-medium">Files</label>
+            <input type="file" multiple @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
           </div>
 
           <div>
@@ -126,11 +126,13 @@
           name: '',
           instructions: '', // Add instructions field
           model: 'gpt-4o', // Default value for model
-          file: null
+          files: [], // Initialize as an empty array
+          tools: ''
         },
 
         assistants: [],
         editingIndex: -1,
+
         pageSize: 4, // Number of assistants per page
         currentPage: 1 // Current page
       };
@@ -162,13 +164,15 @@
 
       async submitForm() {
         try {
-          let uploadedFile = null;
+          let uploadedFiles = [];
 
-          if (this.form.file) {
-            console.log('Uploading file');
-            uploadedFile = await FileService.uploadFile(this.form.file);
-            console.log('File', uploadedFile);
-            console.log('File uploaded');
+          if (this.form.files && this.form.files.length > 0) {
+            console.log('Uploading files');
+
+            // Upload all files in one go and store the results
+            uploadedFiles = await FileService.uploadFile(this.form.files);
+            console.log('Uploaded files', uploadedFiles);
+            console.log('Files uploaded');
           }
           
           // Create an assistant with file search tool and the vector id
@@ -180,10 +184,11 @@
 
           if (this.form.tools) {
             newAssistant.tools = [{ type: this.form.tools }];
-            if (this.form.tools === 'file_search' && uploadedFile.vectorStoreId) {
+
+            if (this.form.tools === 'file_search') {
               newAssistant.tool_resources = {
                 file_search: {
-                  vector_store_ids: uploadedFile.vectorStoreId.split(',').map(id => id.trim())
+                  vector_store_ids: uploadedFiles.id.split(',').map(id => id.trim())
                 }
               };
             }
@@ -239,8 +244,7 @@
       },
 
       handleFileChange(event) {
-        // Handle file change event
-        this.form.file = event.target.files[0];
+        this.form.files = Array.from(event.target.files);
       },
 
       gotoPage(page) {

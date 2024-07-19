@@ -11,10 +11,12 @@ function getBaseUrl() {
 
 
 export default {
-  async uploadFile(file) {
+  async uploadFile(files) {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      files.forEach((file, index) => {
+        formData.append(`file${index}`, file);
+      });
       formData.append('purpose', 'assistants');
 
       const response = await $fetch(`${getBaseUrl()}/files/upload`, {
