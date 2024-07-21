@@ -62,7 +62,8 @@
             </div>
 
             <div v-else>
-              <p class="text-sm text-gray-500">Instructions: {{ assistant.instructions }}</p>
+              <p class="text-sm text-gray-500">Instructions:</p>
+              <div v-html="formattedInstructions(assistant.instructions)" class="whitespace-pre-line"></div>
             </div>
 
             <!-- Files List -->
@@ -94,7 +95,7 @@
         <Pagination :total-pages="totalPages" :current-page="currentPage" @page-changed="gotoPage" />
 
         <!-- Modal Component -->
-        <Modal :fileId="selectedFileId" :isVisible="isModalVisible" @update:isVisible="isModalVisible = $event" />
+        <Modal :file-id="selectedFileId" :is-visible="isModalVisible" @update:is-visible="isModalVisible = $event" />
       </div>
       
     </div>
@@ -109,11 +110,6 @@
 
   const isModalVisible = ref(false);
   const selectedFileId = ref(null);
-
-  function showModal(fileId) {
-    selectedFileId.value = fileId;
-    isModalVisible.value = true;
-  }
 
   export default {
     components: {
@@ -278,6 +274,15 @@
             }
           })
           .join('');
+      },
+       
+      formattedInstructions(instructions) {
+        return instructions.replace(/\n/g, '<br>');
+      },
+
+      showModal(fileId) {
+        selectedFileId.value = fileId;
+        isModalVisible.value = true;
       }
     }
   };
