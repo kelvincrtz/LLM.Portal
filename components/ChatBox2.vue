@@ -5,7 +5,7 @@
       <div class="left-sidebar">
         <!-- Assistant View -->
         <div class="assistant-view">
-          <h2 class="text-xl font-semibold mb-4">Choose an Assistant</h2>
+          <h2 class="text-xl font-semibold mb-4">Assistants</h2>
           <ul>
             <li 
               v-for="assistant in paginatedAssistants" 
@@ -14,8 +14,10 @@
               :class="{'selected': selectedAssistant && selectedAssistant.id === assistant.id}"
               class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
             >
-              <h3 class="font-medium">{{ assistant.name }}</h3>
-              <p class="text-sm text-gray-500">{{ assistant.description }}</p>
+              <h3 class="font-medium">
+                {{ assistant.name ? assistant.name : 'Name undefined' }}
+              </h3>
+              <p class="text-sm text-gray-500">{{ assistant.model }}</p>
             </li>
           </ul>
           <Pagination 
@@ -27,7 +29,7 @@
 
         <!-- Threads View -->
         <div class="threads-view">
-          <h2 class="text-xl font-semibold mb-4">Choose a Thread</h2>
+          <h2 class="text-xl font-semibold mb-4">Threads</h2>
           <ul>
             <li 
               v-for="thread in paginatedThreads" 
@@ -81,6 +83,8 @@
 </template>
   <script>
   import chatGPTService from '~/services/CompletionService';
+  import AssistantService from '@/services/AssistantService';
+  import FileService from '@/services/FileService';
   import Pagination from './Pagination.vue';
 
   export default {
@@ -108,13 +112,21 @@
           { id: 5, name: 'Thread 5', description: 'Description of Thread 5' },
           // Add more threads as needed
         ],
+
         assistantPage: 1,
         threadPage: 1,
-        pageSize: 4,
+        pageSize: 5,
+
         selectedAssistant: null,
         selectedThread: null,
+
         file: null,
       };
+    },
+
+    async created() {
+      await this.loadAssistants();
+      await this.loadThreads(); // Assuming you have a similar service for threads
     },
 
     methods: {
@@ -151,21 +163,16 @@
         return message.startsWith('```') && content.endsWith('```');
       },
 
-      selectAssistant(assistant) {
-        this.selectedAssistant = assistant;
-        // Handle assistant selection logic
-      },
-
       selectThread(thread) {
         this.selectedThread = thread;
         // Load messages for the selected thread
         this.messages = thread.messages || [];
       },
       
-      changeAssistantPage(page) {
-        console.log('Changing Assistant Page to:', page); // Debug message
-        this.assistantPage = page;
-      },
+      //changeAssistantPage(page) {
+      //  console.log('Changing Assistant Page to:', page); // Debug message
+      //  this.assistantPage = page;
+      //},
 
       changeThreadPage(page) {
         console.log('Changing Thread Page to:', page); // Debug message
@@ -182,6 +189,39 @@
       triggerFileInput() {
         this.$refs.fileInput.click();
       },
+
+      async loadAssistants() {
+        const allAssistants = await AssistantService.getAllAssistants();
+        this.assistants = allAssistants;
+        this.updatePagination();
+      },
+      updatePagination() {
+        // Update paginated assistants based on current page
+        const start = (this.assistantPage - 1) * 10; // Assuming 10 per page
+        const end = start + 10;
+        this.paginatedAssistants = this.assistants.slice(start, end);
+        this.assistantTotalPages = Math.ceil(this.assistants.length / 10);
+      },
+      async loadThreads() {
+        // Implement similar logic for threads
+      },
+      selectAssistant(assistant) {
+        this.selectedAssistant = assistant;
+      },
+      changeAssistantPage(page) {
+        this.assistantPage = page;
+        this.updatePagination();
+      },
+      sendMessage() {
+        // Implement sending message logic
+      },
+      triggerFileInput() {
+        this.$refs.fileInput.click();
+      },
+      handleFileUpload(event) {
+        const file = event.target.files[0];
+        this.selectedFile = file;
+      }
     },
 
     computed: {
