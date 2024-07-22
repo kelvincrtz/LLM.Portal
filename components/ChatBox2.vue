@@ -1,13 +1,14 @@
 <template>
   <div class="chat-container">
     <div class="chat-box">
-      <!-- Assistant View -->
+      <!-- Assistant and Threads View -->
       <div class="left-sidebar">
+        <!-- Assistant View -->
         <div class="assistant-view">
           <h2 class="text-xl font-semibold mb-4">Choose an Assistant</h2>
           <ul>
             <li 
-              v-for="assistant in assistants" 
+              v-for="assistant in paginatedAssistants" 
               :key="assistant.id" 
               @click="selectAssistant(assistant)"
               :class="{'selected': selectedAssistant && selectedAssistant.id === assistant.id}"
@@ -17,6 +18,11 @@
               <p class="text-sm text-gray-500">{{ assistant.description }}</p>
             </li>
           </ul>
+          <Pagination 
+            :current-page="assistantPage" 
+            :total-pages="assistantTotalPages" 
+            @page-changed="changeAssistantPage"
+          />
         </div>
 
         <!-- Threads View -->
@@ -24,7 +30,7 @@
           <h2 class="text-xl font-semibold mb-4">Choose a Thread</h2>
           <ul>
             <li 
-              v-for="thread in threads" 
+              v-for="thread in paginatedThreads" 
               :key="thread.id" 
               @click="selectThread(thread)"
               :class="{'selected': selectedThread && selectedThread.id === thread.id}"
@@ -34,6 +40,11 @@
               <p class="text-sm text-gray-500">{{ thread.description }}</p>
             </li>
           </ul>
+          <Pagination 
+            :current-page="threadPage" 
+            :total-pages="threadTotalPages" 
+            @page-changed="changeThreadPage"
+          />
         </div>
       </div>
 
@@ -56,8 +67,13 @@
 
   <script>
   import chatGPTService from '~/services/CompletionService';
-  
+  import Pagination from './Pagination.vue';
+
   export default {
+    components: {
+      Pagination,
+    },
+
     data() {
       return {
         newMessage: '',
@@ -65,22 +81,35 @@
         assistants: [
           { id: 1, name: 'Assistant 1', description: 'Description of Assistant 1' },
           { id: 2, name: 'Assistant 2', description: 'Description of Assistant 2' },
+          { id: 3, name: 'Assistant 3', description: 'Description of Assistant 3' },
+          { id: 4, name: 'Assistant 4', description: 'Description of Assistant 4' },
+          { id: 5, name: 'Assistant 5', description: 'Description of Assistant 5' },
           // Add more assistants as needed
         ],
         threads: [
           { id: 1, name: 'Thread 1', description: 'Description of Thread 1' },
           { id: 2, name: 'Thread 2', description: 'Description of Thread 2' },
+          { id: 3, name: 'Thread 3', description: 'Description of Thread 3' },
+          { id: 4, name: 'Thread 4', description: 'Description of Thread 4' },
+          { id: 5, name: 'Thread 5', description: 'Description of Thread 5' },
           // Add more threads as needed
         ],
+        assistantPage: 1,
+        threadPage: 1,
+        pageSize: 4,
         selectedAssistant: null,
         selectedThread: null,
       };
     },
+
     methods: {
       async sendMessage() {
         if (this.newMessage.trim() === '') return;
 
-        const userMessage = { role: 'user', content: this.newMessage };
+        const userMessage = { 
+          role: 'user', 
+          content: this.newMessage 
+        };
         this.messages.push(userMessage);
         this.newMessage = '';
 
@@ -117,7 +146,18 @@
         // Load messages for the selected thread
         this.messages = thread.messages || [];
       },
+      
+      changeAssistantPage(page) {
+        console.log('Changing Assistant Page to:', page); // Debug message
+        this.assistantPage = page;
+      },
+      
+      changeThreadPage(page) {
+        console.log('Changing Thread Page to:', page); // Debug message
+        this.threadPage = page;
+      },
     },
+
     computed: {
       // Dynamically set Tailwind CSS classes based on message role
       messagesWithRoleClasses() {
@@ -144,7 +184,23 @@
           'bg-blue-100 text-blue-800': message.role === 'user',
           'bg-gray-800 text-white': message.role === 'assistant'
         });
-      }
+      },
+      paginatedAssistants() {
+        const start = (this.assistantPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.assistants.slice(start, end);
+      },
+      assistantTotalPages() {
+        return Math.ceil(this.assistants.length / this.pageSize);
+      },
+      paginatedThreads() {
+        const start = (this.threadPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.threads.slice(start, end);
+      },
+      threadTotalPages() {
+        return Math.ceil(this.threads.length / this.pageSize);
+      },
     }
   };
   </script>
