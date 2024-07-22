@@ -309,7 +309,10 @@
       formattedInstructions(assistant) {
         const limit = 100;
         const cleanedInstructions = this.cleanText(assistant.instructions);
-        if (this.expandedInstructions[assistant.id] || cleanedInstructions.length <= limit) {
+        if (this.expandedInstructions[assistant.id]) {
+          return assistant.instructions;
+        } 
+        if (cleanedInstructions.length <= limit) {
           return cleanedInstructions;
         }
         return cleanedInstructions.substring(0, limit) + '...';
