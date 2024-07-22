@@ -1,20 +1,40 @@
 <template>
-    <div class="chat-container">
-      <div class="chat-box">
+  <div class="chat-container">
+    <div class="chat-box">
+      <!-- Assistant View -->
+      <div class="assistant-view">
+        <h2 class="text-xl font-semibold mb-4">Choose an Assistant</h2>
+        <ul>
+          <li 
+            v-for="assistant in assistants" 
+            :key="assistant.id" 
+            @click="selectAssistant(assistant)"
+            :class="{'selected': selectedAssistant && selectedAssistant.id === assistant.id}"
+            class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
+          >
+            <h3 class="font-medium">{{ assistant.name }}</h3>
+            <p class="text-sm text-gray-500">{{ assistant.description }}</p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Chat Box -->
+      <div class="chat-content">
         <div class="messages">
-          <div v-for="(message, index) in messages" :key="index" :class="message.messagesWithRoleClasses">
-            <p v-if="!isCodeBlock(message.content)" v-html="formatMessage(message.content)" :class="message.textClasses"></p>
+          <div v-for="(message, index) in messages" :key="index" :class="message.role">
+            <p v-if="!isCodeBlock(message.content)" v-html="formatMessage(message.content)"></p>
             <pre v-else><code>{{ message.content }}</code></pre>
           </div>
         </div>
         <div class="input-box">
-          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." class="input-field">
-          <button @click="sendMessage" class="send-button">Send</button>
+          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." />
+          <button @click="sendMessage">Send</button>
         </div>
       </div>
     </div>
-  </template>
-  
+  </div>
+</template>
+
   <script>
   import chatGPTService from '~/services/CompletionService';
   
@@ -22,7 +42,13 @@
     data() {
       return {
         messages: [],
-        newMessage: ''
+        newMessage: '',
+        assistants: [
+          { id: 1, name: 'Assistant 1', description: 'Description of Assistant 1' },
+          { id: 2, name: 'Assistant 2', description: 'Description of Assistant 2' },
+          // Add more assistants as needed
+        ],
+        selectedAssistant: null,
       };
     },
     methods: {
@@ -54,7 +80,12 @@
       isCodeBlock(message) {
         // Simple check for code blocks (can be improved based on your needs)
         return message.includes('```');
-      }
+      },
+
+      selectAssistant(assistant) {
+        this.selectedAssistant = assistant;
+        // Handle assistant selection logic
+      },
     },
     computed: {
       // Dynamically set Tailwind CSS classes based on message role
@@ -93,19 +124,28 @@
   }
   
   .chat-box {
-    @apply max-w-screen-md w-full h-5/6 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex flex-col;
+    @apply w-3/4 h-5/6 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
+  }
+  
+  .assistant-view {
+    @apply w-1/4 p-4 border-r border-gray-300 overflow-y-auto bg-gray-100;
+  }
+  
+  .chat-content {
+    @apply flex flex-col flex-1;
   }
   
   .messages {
     @apply flex-grow p-6 overflow-y-auto bg-gray-200 gap-4 whitespace-normal;
   }
+  
   .user p, .user pre {
     @apply self-end bg-blue-100 text-blue-800 rounded-r-lg p-4 m-0 whitespace-pre-wrap;
   }
   
   .assistant p, .assistant pre {
-  @apply self-start bg-gray-800 text-white rounded-l-lg p-4 m-0 whitespace-pre-wrap;
-}
+    @apply self-start bg-gray-800 text-white rounded-l-lg p-4 m-0 whitespace-pre-wrap;
+  }
   
   .input-box {
     @apply flex p-4 border-t border-gray-300;
