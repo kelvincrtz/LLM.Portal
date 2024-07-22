@@ -8,18 +8,32 @@
         <h2 class="text-xl font-semibold mb-2">Add/Edit Persona</h2>
         <form @submit.prevent="submitForm" class="space-y-4">
 
-          <div>
-            <label class="block mb-2 font-medium">Name</label>
-            <input v-model="form.name" type="text" class="w-full p-2 border border-gray-300 rounded" required />
+           <!-- Name Field -->
+           <div>
+            <label for="name" class="block mb-2 font-medium">Name</label>
+            <input
+              type="text"
+              id="name"
+              v-model="form.name"
+              class="border border-gray-300 p-2 rounded w-full"
+              required
+            />
           </div>
 
+          <!-- Instructions Field -->
           <div>
-            <label class="block mb-2 font-medium">Instructions</label>
-            <textarea v-model="form.instructions" class="w-full p-2 border border-gray-300 rounded" rows="4" required></textarea>
+            <label for="instructions" class="block mb-2 font-medium">Instructions</label>
+            <textarea
+              id="instructions"
+              v-model="form.instructions"
+              class="border border-gray-300 p-2 rounded w-full"
+              rows="4"
+            ></textarea>
           </div>
-
+          
+          <!-- Models Field -->
           <div>
-            <label class="block mb-2 font-medium">Model</label>
+            <label for="model" class="block mb-2 font-medium">Model</label>
             <select v-model="form.model" class="w-full p-2 border border-gray-300 rounded" required>
               <option value="gpt-4o">GPT-4o</option>
               <option value="gpt-4-turbo">GPT-4-turbo</option>
@@ -29,13 +43,20 @@
             </select>
           </div>
           
+          <!-- Files Field -->
           <div>
-            <label class="block mb-2 font-medium">Choose Files OR</label>
-            <input type="file" multiple @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
+            <label for="files" class="block mb-2 font-medium">Files</label>
+            <input
+              type="file"
+              id="files"
+              multiple
+              @change="handleFileChange"
+              class="border border-gray-300 p-2 rounded w-full"
+            />
           </div>
 
           <div>
-            <label class="block mb-2 font-medium">Vector Stores</label>
+            <label for="vectorStore" class="block mb-2 font-medium">Vector Stores</label>
             <div class="space-y-2">
               <div
                 v-for="vectorStore in paginatedVectorStores"
@@ -56,7 +77,7 @@
           </div>
 
           <div>
-            <label class="block mb-2 font-medium">Tools</label>
+            <label for="tools" class="block mb-2 font-medium">Tools</label>
             <select v-model="form.tools" class="w-full p-2 border border-gray-300 rounded">
               <option value="file_search">File Search</option>
               <option value="code_interpreter">Code Interpreter</option>
@@ -253,10 +274,7 @@
               };
             }
           }
-      
-          // TODO: for debugging only 
-          // console.log('New assistant req', newAssistant);
-
+    
           if (this.editingIndex === -1) {
             console.log('Creating new assistant');
             await AssistantService.createAssistant(newAssistant);
