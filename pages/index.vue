@@ -1,15 +1,15 @@
 <template>
     <div>
-      <ChatBox2 />
+      <ChatBox />
     </div>
   </template>
   
   <script>
-  import ChatBox2 from '@/components/ChatBox2';
+  import ChatBox from '@/components/ChatBox';
   
   export default {
     components: {
-      ChatBox2
+      ChatBox
     }
   };
   </script>
