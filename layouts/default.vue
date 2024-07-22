@@ -2,11 +2,11 @@
     <div>
         <header class="shadow-sm bg-white">
             <nav class="container mx-auto p-4 flex justify-between">
-                <NuxtLink to ="/" class="font-bold">LLM Portal Demo</NuxtLink>
+                <NuxtLink to ="/" class="font-bold">LLM Portal</NuxtLink>
                 <ul class="flex gap-4">
                     <li><NuxtLink to="/">Chatbox</NuxtLink></li>
-                    <li><NuxtLink to="/about">Persona</NuxtLink></li>
-                    <li><NuxtLink to="/products" class="btn">Products</NuxtLink></li>
+                    <li><NuxtLink to="/persona">Persona</NuxtLink></li>
+                    <li><NuxtLink to="/products" class="btn">Vector Management</NuxtLink></li>
                 </ul>
             </nav>
         </header>
