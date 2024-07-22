@@ -53,7 +53,7 @@
         <h2 class="text-xl font-semibold mb-2">Persona List</h2>
         <ul>
           <li v-for="(assistant, index) in paginatedAssistants" :key="assistant.id" class="mb-4 p-4 border border-gray-300 rounded bg-white shadow">
-            <h3 class="text-lg font-semibold">{{ assistant.name }}</h3>
+            <h3 class="text-lg font-semibold">{{ assistant.name || 'Name undefined' }}</h3>
             <p class="text-sm text-gray-500">ID : {{ assistant.id }}</p>
             <p>Model: {{ assistant.model }}</p>
 
@@ -64,6 +64,9 @@
             <div v-else>
               <p class="text-sm text-gray-500">Instructions:</p>
               <div v-html="formattedInstructions(assistant.instructions)" class="whitespace-pre-line"></div>
+              <button v-if="assistant.instructions.length > 100" @click="toggleInstructions(assistant.instructions)" class="text-blue-500 hover:underline">
+                {{ expandedInstructions[assistant.instructions] ? 'see less' : 'see more' }}
+              </button>
             </div>
 
             <!-- Files List -->
@@ -130,8 +133,15 @@
         editingIndex: -1,
 
         pageSize: 4, // Number of assistants per page
-        currentPage: 1 // Current page
+        currentPage: 1, // Current page
+
+        selectedFileId: null,
+        isModalVisible: false,
+        expandedInstructions: {} // Keeps track of expanded instructions
       };
+    },
+    mounted() {
+      this.fetchAssistants();
     },
     computed: {
       // Calculate paginated assistants based on currentPage and pageSize
@@ -277,7 +287,16 @@
       },
        
       formattedInstructions(instructions) {
-        return instructions.replace(/\n/g, '<br>');
+        const limit = 90;
+        if (instructions.length > limit) {
+          const truncated = instructions.substring(0, limit) + '...';
+          return this.expandedInstructions[instructions] ? instructions : truncated;
+        }
+        return instructions;
+      },
+
+      toggleInstructions(instructions) {
+        this.$set(this.expandedInstructions, instructions, !this.expandedInstructions[instructions]);
       },
 
       showModal(fileId) {
