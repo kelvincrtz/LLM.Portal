@@ -120,7 +120,7 @@
 </template>
   
   <script>
-  import AssistantsPagination from './Pagination.vue'; // Adjust path as necessary
+  import Pagination from './Pagination.vue'; // Adjust path as necessary
   import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
   import FileService from '@/services/FileService';
   import FileModal from '~/components/Modal.vue';
@@ -131,7 +131,7 @@
 
   export default {
     components: {
-        AssistantsPagination,
+        Pagination,
         FileModal
     },
 
