@@ -131,6 +131,7 @@
 
     methods: {
       async sendMessage() {
+        console.log('Send message button clicked');
         if (this.newMessage.trim() === '') return;
 
         const userMessage = { 
@@ -150,7 +151,6 @@
           } else {
             console.error('Invalid response format:', response);
           }
-
         } catch (error) {
           console.error('Error fetching message:', error);
         }
@@ -212,16 +212,13 @@
         this.assistantPage = page;
         this.updatePagination();
       },
-      sendMessage() {
-        // Implement sending message logic
-      },
       triggerFileInput() {
         this.$refs.fileInput.click();
       },
       handleFileUpload(event) {
         const file = event.target.files[0];
         this.selectedFile = file;
-      }
+      },
     },
 
     computed: {
