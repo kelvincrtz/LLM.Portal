@@ -35,6 +35,19 @@
           </div>
 
           <div>
+            <label class="block mb-2 font-medium">Vector Store</label>
+            <div v-if="vectorStores.length === 0">
+              <p>No vector stores available</p>
+            </div>
+            <select v-model="form.vectorStore" class="w-full p-2 border border-gray-300 rounded">
+              <option value="">Select a Vector Store</option>
+              <option v-for="vectorStore in vectorStores" :key="vectorStore.id" :value="vectorStore.id">
+                {{ vectorStore.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
             <label class="block mb-2 font-medium">Tools</label>
             <select v-model="form.tools" class="w-full p-2 border border-gray-300 rounded">
               <option value="file_search">File Search</option>
@@ -111,6 +124,7 @@
   import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
   import FileService from '@/services/FileService';
   import FileModal from '~/components/Modal.vue';
+  import VectorService from '@/services/VectorService';
 
   const isModalVisible = ref(false);
   const selectedFileId = ref(null);
@@ -128,10 +142,12 @@
           instructions: '', // Add instructions field
           model: 'gpt-4o', // Default value for model
           files: [], // Initialize as an empty array
-          tools: ''
+          tools: '',
+          vectorStore: '' // Add vectorStore field
         },
 
         assistants: [],
+        vectorStores: [], // Initialize vectorStores array
         editingIndex: -1,
 
         pageSize: 4, // Number of assistants per page
@@ -145,6 +161,7 @@
 
     mounted() {
       this.fetchAssistants();
+      this.fetchVectorStores();
     },
 
     computed: {
@@ -161,8 +178,8 @@
     },
 
     async created() {
-      // Fetch assistants data from the service on component creation
-      await this.fetchAssistants();
+      await this.fetchAssistants(); // Fetch assistants data from the service on component creation
+      await this.fetchVectorStores(); // Fetch vector stores on component creation
     },
 
     methods: {
@@ -171,6 +188,16 @@
         this.assistants = await AssistantService.getAllAssistants();
         } catch (error) {
           console.error('Error fetching assistants:', error);
+        }
+      },
+
+      async fetchVectorStores() {
+        try {
+          const response = await VectorService.listVectorStores();
+          console.log('Vector Stores:', response); // Log the response to verify structure
+          this.vectorStores = response.message; // Adjust based on actual API response structure
+        } catch (error) {
+          console.error('Error fetching vector stores:', error);
         }
       },
 
