@@ -30,27 +30,36 @@
           </div>
           
           <div>
-            <label class="block mb-2 font-medium">Files</label>
+            <label class="block mb-2 font-medium">Choose Files OR</label>
             <input type="file" multiple @change="handleFileChange" class="w-full p-2 border border-gray-300 rounded" />
           </div>
 
           <div>
-            <label class="block mb-2 font-medium">Vector Store</label>
-            <div v-if="vectorStores.length === 0">
-              <p>No vector stores available</p>
+            <label class="block mb-2 font-medium">Vector Stores</label>
+            <div class="space-y-2">
+              <div
+                v-for="vectorStore in paginatedVectorStores"
+                :key="vectorStore.id"
+                class="p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-100"
+                @click="selectVectorStore(vectorStore.id)"
+              >
+                <h3 class="text-md font-semibold">{{ vectorStore.name }}</h3>
+                <p class="text-sm text-gray-500">ID: {{ vectorStore.id }}</p>
+                <p class="text-sm text-gray-500">Files: {{ vectorStore.fileCounts.total }}</p>
+              </div>
             </div>
-            <select v-model="form.vectorStore" class="w-full p-2 border border-gray-300 rounded">
-              <option value="">Select a Vector Store</option>
-              <option v-for="vectorStore in vectorStores" :key="vectorStore.id" :value="vectorStore.id">
-                {{ vectorStore.name }}
-              </option>
-            </select>
+            <Pagination
+              :current-page="currentPageVectorStore"
+              :total-pages="totalPagesVectorStore"
+              @page-changed="gotoPageVectorStore"
+            />
           </div>
 
           <div>
             <label class="block mb-2 font-medium">Tools</label>
             <select v-model="form.tools" class="w-full p-2 border border-gray-300 rounded">
               <option value="file_search">File Search</option>
+              <option value="code_interpreter">Code Interpreter</option>
               <!-- Add more tools as necessary -->
             </select>
           </div>
@@ -150,8 +159,11 @@
         vectorStores: [], // Initialize vectorStores array
         editingIndex: -1,
 
+        currentPage: 1, // Current page for assistants
         pageSize: 4, // Number of assistants per page
-        currentPage: 1, // Current page
+
+        currentPageVectorStore: 1, // Current page for vectors
+        pageSizeVectorStore: 4, // Set the page size for vector stores
 
         selectedFileId: null,
         isModalVisible: false,
@@ -174,6 +186,15 @@
       // Calculate total number of pages
       totalPages() {
         return Math.ceil(this.assistants.length / this.pageSize);
+      },
+
+      paginatedVectorStores() {
+      const start = (this.currentPageVectorStore - 1) * this.pageSizeVectorStore;
+      const end = start + this.pageSizeVectorStore;
+      return this.vectorStores.slice(start, end);
+      },
+      totalPagesVectorStore() {
+        return Math.ceil(this.vectorStores.length / this.pageSizeVectorStore);
       }
     },
 
@@ -288,6 +309,14 @@
 
       gotoPage(page) {
         this.currentPage = page;
+      },
+
+      gotoPageVectorStore(page) {
+        this.currentPageVectorStore = page;
+      },
+
+      selectVectorStore(vectorStoreId) {
+        this.form.vectorStore = vectorStoreId;
       },
 
       isJSON(str) {
