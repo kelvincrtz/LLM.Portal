@@ -19,10 +19,10 @@ export default {
           'Content-Type': 'application/json'
         }
       });
-      return response; // Assuming response.data contains the newly created assistant
+      return response;
     } catch (error) {
       console.error('Error creating new thread:', error);
-      throw error; // Propagate the error back to the caller
+      throw error;
     }
   },
 
@@ -35,10 +35,10 @@ export default {
           'Content-Type': 'application/json'
         }
       });
-      return response; // Assuming response.data contains the updated assistant
+      return response;
     } catch (error) {
       console.error(`Error continuing thread with ID ${id}:`, error);
-      throw error; // Propagate the error back to the caller
+      throw error;
     }
   },
 
@@ -47,10 +47,10 @@ export default {
       const response = await $fetch(`${getBaseUrl()}/threads/${id}`, {
         method: 'DELETE'
       });
-      return response; // Assuming response.data contains success/failure message
+      return response;
     } catch (error) {
       console.error(`Error deleting thread with ID ${id}:`, error);
-      throw error; // Propagate the error back to the caller
+      throw error;
     }
   }
 };
