@@ -48,23 +48,37 @@
         </div>
       </div>
 
-      <!-- Chat Box -->
+      <!-- Chat Content -->
       <div class="chat-content">
+        <!-- Selected Assistant Name -->
+        <div class="chat-header p-4 border-b border-gray-300">
+          <h2 class="text-xl font-semibold">
+            {{ selectedAssistant ? selectedAssistant.name : 'No Assistant Selected' }}
+          </h2>
+        </div>
+        
+        <!-- Messages -->
         <div class="messages">
           <div v-for="(message, index) in messages" :key="index" :class="message.role">
             <p v-if="!isCodeBlock(message.content)" v-html="formatMessage(message.content)"></p>
             <pre v-else><code>{{ message.content }}</code></pre>
           </div>
         </div>
+        
+        <!-- Input Box -->
         <div class="input-box">
-          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." />
-          <button @click="sendMessage">Send</button>
+          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." class="input-field" />
+          <div class="action-buttons">
+            <button @click="sendMessage" class="send-button">Send</button>
+            <button @click="triggerFileInput" class="file-button">+</button>
+            <input type="file" ref="fileInput" @change="handleFileUpload" class="file-input" />
+          </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
-
   <script>
   import chatGPTService from '~/services/CompletionService';
   import Pagination from './Pagination.vue';
@@ -99,6 +113,7 @@
         pageSize: 4,
         selectedAssistant: null,
         selectedThread: null,
+        file: null,
       };
     },
 
@@ -112,6 +127,7 @@
         };
         this.messages.push(userMessage);
         this.newMessage = '';
+        this.file = null; // Clear the file input
 
         try {
           const response = await chatGPTService.sendMessage(userMessage.content);
@@ -132,8 +148,7 @@
         return message.replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
       },
       isCodeBlock(message) {
-        // Simple check for code blocks (can be improved based on your needs)
-        return message.includes('```');
+        return message.startsWith('```') && content.endsWith('```');
       },
 
       selectAssistant(assistant) {
@@ -151,10 +166,21 @@
         console.log('Changing Assistant Page to:', page); // Debug message
         this.assistantPage = page;
       },
-      
+
       changeThreadPage(page) {
         console.log('Changing Thread Page to:', page); // Debug message
         this.threadPage = page;
+      },
+
+      handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+          this.file = file;
+        }
+      },
+
+      triggerFileInput() {
+        this.$refs.fileInput.click();
       },
     },
 
@@ -238,6 +264,10 @@
     @apply flex flex-col flex-1;
   }
   
+  .chat-header {
+    @apply bg-white;
+  }
+  
   .messages {
     @apply flex-grow p-6 overflow-y-auto bg-gray-200 gap-4 whitespace-normal;
   }
@@ -251,19 +281,27 @@
   }
   
   .input-box {
-    @apply flex p-4 border-t border-gray-300;
+    @apply flex items-center p-4 border-t border-gray-300;
   }
   
-  .input-box input {
+  .input-box .input-field {
     @apply flex-1 py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring focus:ring-blue-200;
   }
   
-  .input-box button {
-    @apply py-2 px-6 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
+  .input-box .action-buttons {
+    @apply flex items-center gap-2 ml-4;
   }
   
-  .input-box button:hover {
-    @apply bg-blue-600;
+  .input-box .send-button {
+    @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
+  }
+  
+  .input-box .file-button {
+    @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
+  }
+  
+  input[type="file"] {
+    @apply hidden;
   }
   
   /* Code block styling */
