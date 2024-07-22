@@ -2,20 +2,39 @@
   <div class="chat-container">
     <div class="chat-box">
       <!-- Assistant View -->
-      <div class="assistant-view">
-        <h2 class="text-xl font-semibold mb-4">Choose an Assistant</h2>
-        <ul>
-          <li 
-            v-for="assistant in assistants" 
-            :key="assistant.id" 
-            @click="selectAssistant(assistant)"
-            :class="{'selected': selectedAssistant && selectedAssistant.id === assistant.id}"
-            class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
-          >
-            <h3 class="font-medium">{{ assistant.name }}</h3>
-            <p class="text-sm text-gray-500">{{ assistant.description }}</p>
-          </li>
-        </ul>
+      <div class="left-sidebar">
+        <div class="assistant-view">
+          <h2 class="text-xl font-semibold mb-4">Choose an Assistant</h2>
+          <ul>
+            <li 
+              v-for="assistant in assistants" 
+              :key="assistant.id" 
+              @click="selectAssistant(assistant)"
+              :class="{'selected': selectedAssistant && selectedAssistant.id === assistant.id}"
+              class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
+            >
+              <h3 class="font-medium">{{ assistant.name }}</h3>
+              <p class="text-sm text-gray-500">{{ assistant.description }}</p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Threads View -->
+        <div class="threads-view">
+          <h2 class="text-xl font-semibold mb-4">Choose a Thread</h2>
+          <ul>
+            <li 
+              v-for="thread in threads" 
+              :key="thread.id" 
+              @click="selectThread(thread)"
+              :class="{'selected': selectedThread && selectedThread.id === thread.id}"
+              class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
+            >
+              <h3 class="font-medium">{{ thread.name }}</h3>
+              <p class="text-sm text-gray-500">{{ thread.description }}</p>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- Chat Box -->
@@ -41,14 +60,20 @@
   export default {
     data() {
       return {
-        messages: [],
         newMessage: '',
+        messages: [],
         assistants: [
           { id: 1, name: 'Assistant 1', description: 'Description of Assistant 1' },
           { id: 2, name: 'Assistant 2', description: 'Description of Assistant 2' },
           // Add more assistants as needed
         ],
+        threads: [
+          { id: 1, name: 'Thread 1', description: 'Description of Thread 1' },
+          { id: 2, name: 'Thread 2', description: 'Description of Thread 2' },
+          // Add more threads as needed
+        ],
         selectedAssistant: null,
+        selectedThread: null,
       };
     },
     methods: {
@@ -85,6 +110,12 @@
       selectAssistant(assistant) {
         this.selectedAssistant = assistant;
         // Handle assistant selection logic
+      },
+
+      selectThread(thread) {
+        this.selectedThread = thread;
+        // Load messages for the selected thread
+        this.messages = thread.messages || [];
       },
     },
     computed: {
@@ -124,11 +155,27 @@
   }
   
   .chat-box {
-    @apply w-3/4 h-5/6 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
+    @apply w-4/5 h-5/6 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
   }
   
-  .assistant-view {
-    @apply w-1/4 p-4 border-r border-gray-300 overflow-y-auto bg-gray-100;
+  .left-sidebar {
+    @apply w-1/3 p-4 border-r border-gray-300 overflow-y-auto bg-gray-100 flex flex-col;
+  }
+  
+  .assistant-view, .threads-view {
+    @apply flex-1;
+  }
+  
+  .assistant-view ul, .threads-view ul {
+    @apply list-none p-0;
+  }
+  
+  .assistant-view li, .threads-view li {
+    @apply cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100;
+  }
+  
+  .assistant-view li.selected, .threads-view li.selected {
+    @apply bg-gray-200;
   }
   
   .chat-content {
