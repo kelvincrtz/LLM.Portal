@@ -83,10 +83,8 @@
   </div>
 </template>
   <script>
-  import chatGPTService from '~/services/CompletionService';
   import AssistantService from '@/services/AssistantService';
   import ThreadService from '@/services/ThreadService';
-  import FileService from '@/services/FileService';
   import Pagination from './Pagination.vue';
 
   export default {
@@ -133,16 +131,44 @@
       async sendMessage() {
         if (this.newMessage.trim() === '') return;
 
-        const userMessage = { 
-          role: 'user', 
-          content: this.newMessage 
+        // Create the request payload
+        const requestPayload = {
+          role: 'user', // TODO:
+          content: this.newMessage,
+          // assistant_id: this.selectedAssistant.id, // Assuming you have selected an assistant
+          model: 'gpt-3.5-turbo' // TODO:
+        };
+
+        // Add the user message to the messages array
+        const userMessage = {
+          role: 'user',
+          content: this.newMessage
         };
         this.messages.push(userMessage);
-        this.newMessage = '';
+        this.newMessage = ''; // Clear the input field
         this.file = null; // Clear the file input
 
         try {
-          const response = null; // TODO: 
+          let response;
+          
+          if (this.selectedThread) {
+            // Continue the existing thread
+            response = await ThreadService.continueThread(this.selectedThread.id, requestPayload);
+          } else {
+            // Create a new thread
+            response = await ThreadService.startNewThread(requestPayload);
+            
+            // After creating a new thread, you might want to set it as the selected thread
+            this.selectedThread = response.thread; // Assuming the API response contains the new thread details
+            
+            // Optionally, you might also need to update your messages to include the initial response
+            const initialMessage = {
+              role: response.initialMessage.role,
+              content: response.initialMessage.content
+            };
+            this.messages.push(initialMessage);
+          }
+
           console.log('API Response:', response); // Log the response to inspect it
 
           if (response && response.message && response.message.length > 0) {
@@ -150,11 +176,12 @@
 
             // Extract content from the array
             const botMessageContent = botMessageData.content.map(item => item.text.value).join(' ');
-            const botMessage = { 
-              role: botMessageData.role, 
-              content: botMessageContent 
+            const botMessage = {
+              role: botMessageData.role,
+              content: botMessageContent
             };
-            
+
+            // Add the bot message to the messages array
             this.messages.push(botMessage);
           } else {
             console.error('Invalid response format:', response);
@@ -178,7 +205,7 @@
         // return message.startsWith('```') && content.endsWith('```');
         // Implement logic if you have specific markers for code blocks
         // For this example, assume it's not a code block
-        return false;
+        // return false;
       },
 
       selectThread(thread) {
