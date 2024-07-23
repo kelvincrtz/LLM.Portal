@@ -329,11 +329,13 @@
   .chat-container {
     @apply flex justify-center items-center h-screen bg-gray-100;
   }
-  
+
   .chat-box {
-    @apply w-4/5 h-5/6 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
+    width: 90%;
+    height: 90%;
+    @apply bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
   }
-  
+
   .left-sidebar {
     @apply w-1/3 p-4 border-r border-gray-300 overflow-y-auto bg-gray-100 flex flex-col;
   }
