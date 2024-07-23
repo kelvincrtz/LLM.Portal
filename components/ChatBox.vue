@@ -60,7 +60,7 @@
         </div>
         
         <!-- Messages -->
-        <div class="messages">
+        <div ref="messagesContainer" class="messages">
           <div v-for="(message, index) in messages" :key="index" :class="message.role">
             <p v-html="formatMessage(message.content)"></p>
             <!-- If you have specific handling for code blocks, you can adjust this part -->
@@ -131,7 +131,6 @@
 
     methods: {
       async sendMessage() {
-        console.log('Send message button clicked');
         if (this.newMessage.trim() === '') return;
 
         const userMessage = { 
@@ -143,7 +142,7 @@
         this.file = null; // Clear the file input
 
         try {
-          const response = await chatGPTService.sendMessage(userMessage.content);
+          const response = null; // TODO: 
           console.log('API Response:', response); // Log the response to inspect it
 
           if (response && response.message && response.message.length > 0) {
@@ -164,6 +163,7 @@
           console.error('Error sending message:', error);
         }
       },
+
       formatMessage(message) {
         if (Array.isArray(message)) {
           // Join array content into a single string
@@ -222,6 +222,7 @@
         this.assistants = allAssistants;
         this.updatePagination();
       },
+      
       updatePagination() {
         // Update paginated assistants based on current page
         const start = (this.assistantPage - 1) * 10; // Assuming 10 per page
@@ -229,6 +230,7 @@
         this.paginatedAssistants = this.assistants.slice(start, end);
         this.assistantTotalPages = Math.ceil(this.assistants.length / 10);
       },
+
       async loadThreads() {
         // Implement similar logic for threads
         // TODO: the code below doesnt exist
@@ -240,25 +242,35 @@
         //  console.error('Error loading threads:', error);
         //}
       },
+
       updateThreadPagination() {
         const start = (this.threadPage - 1) * this.pageSize;
         const end = start + this.pageSize;
         this.paginatedThreads = this.threads.slice(start, end);
         this.threadTotalPages = Math.ceil(this.threads.length / this.pageSize);
       },
+
       selectAssistant(assistant) {
         this.selectedAssistant = assistant;
       },
+
       changeAssistantPage(page) {
         this.assistantPage = page;
         this.updatePagination();
       },
+
       triggerFileInput() {
         this.$refs.fileInput.click();
       },
+
       handleFileUpload(event) {
         const file = event.target.files[0];
         this.selectedFile = file;
+      },
+
+      scrollToBottom() {
+        const messagesContainer = this.$refs.messagesContainer;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       },
     },
 
@@ -305,7 +317,11 @@
       threadTotalPages() {
         return Math.ceil(this.threads.length / this.pageSize);
       },
-    }
+    },
+    
+    updated() {
+        this.scrollToBottom();
+      }
   };
   </script>
   
