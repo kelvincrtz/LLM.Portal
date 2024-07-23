@@ -62,8 +62,9 @@
         <!-- Messages -->
         <div class="messages">
           <div v-for="(message, index) in messages" :key="index" :class="message.role">
-            <p v-if="!isCodeBlock(message.content)" v-html="formatMessage(message.content)"></p>
-            <pre v-else><code>{{ message.content }}</code></pre>
+            <p v-html="formatMessage(message.content)"></p>
+            <!-- If you have specific handling for code blocks, you can adjust this part -->
+            <!-- <pre v-if="isCodeBlock(message.content)"><code>{{ message.content }}</code></pre> -->
           </div>
         </div>
         
@@ -84,6 +85,7 @@
   <script>
   import chatGPTService from '~/services/CompletionService';
   import AssistantService from '@/services/AssistantService';
+  import ThreadService from '@/services/ThreadService';
   import FileService from '@/services/FileService';
   import Pagination from './Pagination.vue';
 
@@ -97,19 +99,17 @@
         newMessage: '',
         messages: [],
         assistants: [
-          { id: 1, name: 'Assistant 1', description: 'Description of Assistant 1' },
-          { id: 2, name: 'Assistant 2', description: 'Description of Assistant 2' },
-          { id: 3, name: 'Assistant 3', description: 'Description of Assistant 3' },
-          { id: 4, name: 'Assistant 4', description: 'Description of Assistant 4' },
-          { id: 5, name: 'Assistant 5', description: 'Description of Assistant 5' },
+          { id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', name: 'Assistant 1', description: 'Description of Assistant 1' },
+          { id: '', name: 'Assistant 2', description: 'Description of Assistant 2' },
+          { id: '', name: 'Assistant 3', description: 'Description of Assistant 3' },
+          { id: '', name: 'Assistant 4', description: 'Description of Assistant 4' },
+          { id: '', name: 'Assistant 5', description: 'Description of Assistant 5' },
           // Add more assistants as needed
         ],
         threads: [
-          { id: 1, name: 'Thread 1', description: 'Description of Thread 1' },
-          { id: 2, name: 'Thread 2', description: 'Description of Thread 2' },
-          { id: 3, name: 'Thread 3', description: 'Description of Thread 3' },
-          { id: 4, name: 'Thread 4', description: 'Description of Thread 4' },
-          { id: 5, name: 'Thread 5', description: 'Description of Thread 5' },
+          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Description of Thread 1 with data' },
+          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread 2', description: 'Description of Thread 2 data' },
+          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread 3', description: 'Description of Thread 3 data' },
           // Add more threads as needed
         ],
 
@@ -126,7 +126,7 @@
 
     async created() {
       await this.loadAssistants();
-      await this.loadThreads(); // Assuming you have a similar service for threads
+      await this.loadThreads();
     },
 
     methods: {
@@ -144,29 +144,56 @@
 
         try {
           const response = await chatGPTService.sendMessage(userMessage.content);
-          const botMessageContent = response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content;
-          if (botMessageContent) {
-            const botMessage = { role: 'assistant', content: botMessageContent };
+          console.log('API Response:', response); // Log the response to inspect it
+
+          if (response && response.message && response.message.length > 0) {
+            const botMessageData = response.message[0]; // Get the first message
+
+            // Extract content from the array
+            const botMessageContent = botMessageData.content.map(item => item.text.value).join(' ');
+            const botMessage = { 
+              role: botMessageData.role, 
+              content: botMessageContent 
+            };
+            
             this.messages.push(botMessage);
           } else {
             console.error('Invalid response format:', response);
           }
         } catch (error) {
-          console.error('Error fetching message:', error);
+          console.error('Error sending message:', error);
         }
       },
       formatMessage(message) {
-        // Preserve spaces and line breaks
+        if (Array.isArray(message)) {
+          // Join array content into a single string
+          message = message.map(item => item.text.value).join(' ');
+        }
+
+        // Convert new lines and spaces into HTML
         return message.replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
       },
+
       isCodeBlock(message) {
-        return message.startsWith('```') && content.endsWith('```');
+        // return message.startsWith('```') && content.endsWith('```');
+        // Implement logic if you have specific markers for code blocks
+        // For this example, assume it's not a code block
+        return false;
       },
 
       selectThread(thread) {
         this.selectedThread = thread;
         // Load messages for the selected thread
-        this.messages = thread.messages || [];
+        this.loadThreadMessages(thread.id); // Load messages for the selected thread
+      },
+
+      async loadThreadMessages(threadId) {
+        try {
+          const response = await ThreadService.getThreadMessages(threadId);
+          this.messages = response.message;
+        } catch (error) {
+          console.error('Error loading thread messages:', error);
+        }
       },
       
       //changeAssistantPage(page) {
@@ -204,6 +231,20 @@
       },
       async loadThreads() {
         // Implement similar logic for threads
+        // TODO: the code below doesnt exist
+        //  try {
+        //  const allThreads = await ThreadService.getAllThreads();
+        //  this.threads = allThreads;
+        //  this.updateThreadPagination();
+        //} catch (error) {
+        //  console.error('Error loading threads:', error);
+        //}
+      },
+      updateThreadPagination() {
+        const start = (this.threadPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        this.paginatedThreads = this.threads.slice(start, end);
+        this.threadTotalPages = Math.ceil(this.threads.length / this.pageSize);
       },
       selectAssistant(assistant) {
         this.selectedAssistant = assistant;

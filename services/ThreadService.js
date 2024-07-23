@@ -52,5 +52,17 @@ export default {
       console.error(`Error deleting thread with ID ${id}:`, error);
       throw error;
     }
-  }
+  },
+
+  // messages
+  async getThreadMessages(threadId) {
+    try {
+      const response = await $fetch(`${getBaseUrl()}/messages/${threadId}`);
+      //console.log(response.message);
+      return response;
+    } catch (error) {
+      console.error('Error listing message thread:', error);
+      throw error; // Propagate the error back to the caller
+    }
+  },
 };
