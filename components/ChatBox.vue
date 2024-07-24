@@ -66,10 +66,11 @@
             <!-- If you have specific handling for code blocks, you can adjust this part -->
             <!-- <pre v-if="isCodeBlock(message.content)"><code>{{ message.content }}</code></pre> -->
           </div>
-          <!-- Loading Spinner -->
-          <div v-if="loading" class="loading-spinner">
-            <!-- Simple spinner or loading animation -->
-            <div class="spinner"></div>
+          <!-- Loading Animation -->
+          <div v-if="loading" class="loading-animation">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
           </div>
         </div>
         
@@ -434,25 +435,36 @@
     @apply font-mono;
   }
 
-  .loading-spinner {
+  .loading-animation {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 50px; /* Adjust height as needed */
   }
 
-  .spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #667eea;
+  .dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background-color: #667eea;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
+    animation: bounce 1.4s infinite both;
   }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
+  .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
     }
   }
   </style>
