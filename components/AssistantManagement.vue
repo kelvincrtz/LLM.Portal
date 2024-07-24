@@ -454,8 +454,8 @@
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
   
-  .focus:border-indigo-500 {
-    border-color: #667eea;
+  .input-field:focus {
+    border-color: #667eea; /* Tailwind's indigo-500 color */
     box-shadow: 0 0 0 1px #667eea;
   }
   

@@ -66,11 +66,16 @@
             <!-- If you have specific handling for code blocks, you can adjust this part -->
             <!-- <pre v-if="isCodeBlock(message.content)"><code>{{ message.content }}</code></pre> -->
           </div>
+          <!-- Loading Spinner -->
+          <div v-if="loading" class="loading-spinner">
+            <!-- Simple spinner or loading animation -->
+            <div class="spinner"></div>
+          </div>
         </div>
         
         <!-- Input Box -->
         <div class="input-box">
-          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." class="input-field" />
+          <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message..." class="input-field focus:border-indigo-500 focus:ring focus:ring-indigo-200" />
           <div class="action-buttons">
             <button @click="sendMessage" class="send-button">Send</button>
             <button @click="triggerFileInput" class="file-button">+</button>
@@ -120,6 +125,8 @@
         selectedThread: null,
 
         file: null,
+
+        loading: false,
       };
     },
 
@@ -136,6 +143,8 @@
             console.error('No assistant selected.');
             return;
         }
+
+        this.loading = true; // Set loading to true before the request
 
         // Create the request payload
         const requestPayload = {
@@ -190,6 +199,7 @@
 
               // Add the bot message to the messages array
               this.messages.push(botMessage);
+              this.loading = false; // Set loading to false after the response
           } else {
               console.error('Invalid response format:', response);
           }
@@ -422,5 +432,27 @@
   
   code {
     @apply font-mono;
+  }
+
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px; /* Adjust height as needed */
+  }
+
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #667eea;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
   </style>
