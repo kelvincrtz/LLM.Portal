@@ -205,7 +205,9 @@
         }
 
         // Convert new lines and spaces into HTML
-        return message.replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
+        return message
+          .replace(/\n/g, '<br>')
+          .replace(/ {2,}/g, match => '&nbsp;'.repeat(match.length));
       },
 
       isCodeBlock(message) {
