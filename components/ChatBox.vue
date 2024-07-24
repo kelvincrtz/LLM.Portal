@@ -2,6 +2,7 @@
   <div class="chat-container">
     <div class="chat-box">
       <!-- Assistant and Threads View -->
+
       <div class="left-sidebar">
         <!-- Assistant View -->
         <div class="assistant-view">
@@ -98,7 +99,7 @@
         messages: [],
         assistants: [
           { id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', name: 'Assistant 1', description: 'Description of Assistant 1' },
-          { id: '', name: 'Assistant 2', description: 'Description of Assistant 2' },
+          { id: 'asst_RdiEte1pFnR77JuUBEpGtrJA', name: 'Assistant 2', description: 'Rain Assistant 2' },
           { id: '', name: 'Assistant 3', description: 'Description of Assistant 3' },
           { id: '', name: 'Assistant 4', description: 'Description of Assistant 4' },
           { id: '', name: 'Assistant 5', description: 'Description of Assistant 5' },
@@ -106,8 +107,8 @@
         ],
         threads: [
           { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Description of Thread 1 with data' },
-          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread 2', description: 'Description of Thread 2 data' },
-          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread 3', description: 'Description of Thread 3 data' },
+          { id: 'thread_ySUjQDaLklC3RPOjrDk7BT3q', name: 'About weather thread', description: 'Description of Thread 2 data' },
+          { id: 'thread_BsHPvqkm5MwlLiBagex4jGqz', name: 'About NZ weather', description: 'Description of Thread 3 data' },
           // Add more threads as needed
         ],
 
@@ -133,16 +134,15 @@
 
         // Create the request payload
         const requestPayload = {
-          role: 'user', // TODO:
-          content: this.newMessage,
-          // assistant_id: this.selectedAssistant.id, // Assuming you have selected an assistant
-          model: 'gpt-3.5-turbo' // TODO:
+            role: 'user',
+            content: this.newMessage,
+            model: 'gpt-3.5-turbo'
         };
 
         // Add the user message to the messages array
         const userMessage = {
-          role: 'user',
-          content: this.newMessage
+            role: 'user',
+            content: this.newMessage
         };
         this.messages.push(userMessage);
         this.newMessage = ''; // Clear the input field
@@ -150,45 +150,46 @@
 
         try {
           let response;
-          
+
           if (this.selectedThread) {
-            // Continue the existing thread
-            response = await ThreadService.continueThread(this.selectedThread.id, requestPayload);
+              // Continue the existing thread
+              response = await ThreadService.continueThread(this.selectedThread.id, requestPayload);
           } else {
-            // Create a new thread
-            response = await ThreadService.startNewThread(requestPayload);
-            
-            // After creating a new thread, you might want to set it as the selected thread
-            this.selectedThread = response.thread; // Assuming the API response contains the new thread details
-            
-            // Optionally, you might also need to update your messages to include the initial response
-            const initialMessage = {
-              role: response.initialMessage.role,
-              content: response.initialMessage.content
-            };
-            this.messages.push(initialMessage);
+              // Create a new thread
+              response = await ThreadService.startNewThread(requestPayload);
+
+              // After creating a new thread, set it as the selected thread
+              this.selectedThread = response.thread; // Assuming the API response contains the new thread details
+              
+              // Optionally, update your messages to include the initial response
+              const initialMessage = {
+                  role: response.initialMessage.role,
+                  content: response.initialMessage.content
+              };
+              this.messages.push(initialMessage);
           }
 
           console.log('API Response:', response); // Log the response to inspect it
 
-          if (response && response.message && response.message.length > 0) {
-            const botMessageData = response.message[0]; // Get the first message
+          // Handle the response format correctly
+          if (response && response.content && response.content.length > 0) {
+              const botMessageData = response; // Directly use the response
 
-            // Extract content from the array
-            const botMessageContent = botMessageData.content.map(item => item.text.value).join(' ');
-            const botMessage = {
-              role: botMessageData.role,
-              content: botMessageContent
-            };
+              // Extract content from the array
+              const botMessageContent = botMessageData.content.map(item => item.text.value).join(' ');
+              const botMessage = {
+                  role: botMessageData.role,
+                  content: botMessageContent
+              };
 
-            // Add the bot message to the messages array
-            this.messages.push(botMessage);
+              // Add the bot message to the messages array
+              this.messages.push(botMessage);
           } else {
-            console.error('Invalid response format:', response);
+              console.error('Invalid response format:', response);
           }
-        } catch (error) {
-          console.error('Error sending message:', error);
-        }
+          } catch (error) {
+              console.error('Error sending message:', error);
+          }
       },
 
       formatMessage(message) {
