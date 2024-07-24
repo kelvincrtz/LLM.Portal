@@ -82,7 +82,8 @@
     </div>
   </div>
 </template>
-  <script>
+
+<script>
   import AssistantService from '@/services/AssistantService';
   import ThreadService from '@/services/ThreadService';
   import Pagination from './Pagination.vue';
@@ -124,7 +125,7 @@
 
     async created() {
       await this.loadAssistants();
-      await this.loadThreads();
+      // await this.loadThreads(); // TODO:
     },
 
     methods: {
@@ -335,7 +336,7 @@
         this.scrollToBottom();
       }
   };
-  </script>
+</script>
   
   <style scoped>
   .chat-container {
