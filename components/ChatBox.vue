@@ -2,7 +2,6 @@
   <div class="chat-container">
     <div class="chat-box">
       <!-- Assistant and Threads View -->
-
       <div class="left-sidebar">
         <!-- Assistant View -->
         <div class="assistant-view">
@@ -132,11 +131,17 @@
       async sendMessage() {
         if (this.newMessage.trim() === '') return;
 
+        if (!this.selectedAssistant) {
+            console.error('No assistant selected.');
+            return;
+        }
+
         // Create the request payload
         const requestPayload = {
             role: 'user',
             content: this.newMessage,
-            model: 'gpt-3.5-turbo'
+            assistant_id: this.selectedAssistant.id, // Include the selected assistant ID
+            model: 'gpt-3.5-turbo' // TODO: 
         };
 
         // Add the user message to the messages array
@@ -259,18 +264,6 @@
         this.assistantTotalPages = Math.ceil(this.assistants.length / 10);
       },
 
-      async loadThreads() {
-        // Implement similar logic for threads
-        // TODO: the code below doesnt exist
-        //  try {
-        //  const allThreads = await ThreadService.getAllThreads();
-        //  this.threads = allThreads;
-        //  this.updateThreadPagination();
-        //} catch (error) {
-        //  console.error('Error loading threads:', error);
-        //}
-      },
-
       updateThreadPagination() {
         const start = (this.threadPage - 1) * this.pageSize;
         const end = start + this.pageSize;
@@ -285,15 +278,6 @@
       changeAssistantPage(page) {
         this.assistantPage = page;
         this.updatePagination();
-      },
-
-      triggerFileInput() {
-        this.$refs.fileInput.click();
-      },
-
-      handleFileUpload(event) {
-        const file = event.target.files[0];
-        this.selectedFile = file;
       },
 
       scrollToBottom() {
