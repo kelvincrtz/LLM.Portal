@@ -43,15 +43,38 @@
         <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
           <h3 class="text-lg font-semibold mb-2">Generated JSON Response</h3>
           <pre v-if="!isEditing" class="whitespace-pre-wrap break-words">{{ formattedResponse }}</pre>
-          <textarea v-if="isEditing" v-model="response" class="w-full p-2 border border-gray-300 rounded bg-gray-100" rows="10"></textarea>
+          <textarea
+            v-if="isEditing"
+            v-model="response"
+            class="w-full p-2 border border-gray-300 rounded bg-gray-100"
+            rows="40"
+          ></textarea>
           <div class="mt-4">
-            <button v-if="!isEditing" @click="isEditing = true" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-700 mr-2">
+            <button
+              v-if="!isEditing"
+              @click="isEditing = true"
+              class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-700 mr-2"
+            >
               Edit JSON
             </button>
-            <button v-if="isEditing" @click="saveEdit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700 mr-2">
+            <button
+              v-if="isEditing"
+              @click="saveEdit"
+              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700 mr-2"
+            >
               Save Edit
             </button>
-            <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+            <button
+              v-if="isEditing"
+              @click="cancelEdit"
+              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 mr-2"
+            >
+              Cancel
+            </button>
+            <button
+              @click="generateResponse"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+            >
               Generate New Response
             </button>
           </div>
@@ -173,6 +196,10 @@ function saveEdit() {
   isEditing.value = false;
   showAlert.value = true;
   setTimeout(() => showAlert.value = false, 3000);
+}
+
+function cancelEdit() {
+  isEditing.value = false;
 }
 
 function changePage(page) {
