@@ -40,11 +40,11 @@
             <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
 
             <!-- Loading Animation -->
-            <!--<div v-if="loading" class="loading-animation">
+            <div v-if="loading" class="loading-animation">
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
-            </div>-->
+            </div>
 
           </div>
         </div>
@@ -130,7 +130,7 @@ const error = ref('');
 const showAlert = ref(false);
 const isEditing = ref(false);
 
-// const loading = false;
+const loading = ref(false);
 
 const paginatedAssistants = computed(() => {
   const start = (currentPage.value - 1) * assistantsPerPage;
@@ -152,7 +152,7 @@ async function generateResponse() {
   error.value = '';
   response.value = ''; // Clear previous response if any
 
-    // this.loading = true; // Set loading to true before the request
+    loading.value = true; // Set loading to true before the request
 
     // Create the request payload
     const requestPayload = {
@@ -171,6 +171,7 @@ async function generateResponse() {
         // Handle the response format correctly
         if (apiResponse) {
             response.value = JSON.stringify(apiResponse, null, 2);
+            loading.value = false; // Set loading to false after the response
             console.log('Formatted Response:', response.value);
         } else {
             console.error('Invalid response format:', apiResponse);
