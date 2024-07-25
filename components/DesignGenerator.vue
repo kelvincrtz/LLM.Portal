@@ -32,11 +32,20 @@
             <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
               Generate JSON Response
             </button>
+            <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
           </div>
         </div>
         <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
           <h3 class="text-lg font-semibold mb-2">Generated JSON Response</h3>
           <pre class="whitespace-pre-wrap break-words bg-gray-100 p-4 rounded">{{ response }}</pre>
+          <div class="mt-4">
+            <button @click="saveResponse" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700 mr-2">
+              Save Response
+            </button>
+            <button @click="generateResponse" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-700">
+              Generate New Response
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -54,20 +63,21 @@ const assistants = ref([
 const selectedAssistant = ref(null);
 const topic = ref('');
 const response = ref('');
+const error = ref('');
 
 function selectAssistant(assistant) {
   selectedAssistant.value = assistant;
+  error.value = '';
 }
 
 async function generateResponse() {
-  console.log('Generating response...');
-  if (!selectedAssistant.value || !topic.value) {
-    console.log('No assistant selected or topic provided.');
+  if (!topic.value) {
+    error.value = 'Topic cannot be empty!';
     return;
   }
 
-  console.log('Assistant selected:', selectedAssistant.value);
-  console.log('Topic provided:', topic.value);
+  error.value = '';
+  response.value = ''; // Clear previous response if any
 
   // Simulate fetching a detailed JSON response
   const simulatedResponse = {
@@ -117,8 +127,12 @@ async function generateResponse() {
     }
   };
 
-  console.log('Simulated response:', simulatedResponse);
   response.value = JSON.stringify(simulatedResponse, null, 2);
+}
+
+function saveResponse() {
+  console.log('Response saved:', response.value);
+  alert('Response saved!');
 }
 </script>
 
@@ -150,6 +164,12 @@ async function generateResponse() {
 .hover\:bg-blue-700:hover {
   background-color: #1d4ed8;
 }
+.hover\:bg-green-700:hover {
+  background-color: #15803d;
+}
+.hover\:bg-yellow-700:hover {
+  background-color: #ca8a04;
+}
 .rounded {
   border-radius: 0.375rem;
 }
@@ -165,13 +185,28 @@ async function generateResponse() {
 .bg-blue-500 {
   background-color: #3b82f6;
 }
+.bg-green-500 {
+  background-color: #10b981;
+}
+.bg-yellow-500 {
+  background-color: #f59e0b;
+}
 .text-white {
   color: #fff;
+}
+.text-red-500 {
+  color: #ef4444;
 }
 .whitespace-pre-wrap {
   white-space: pre-wrap;
 }
 .break-words {
   word-break: break-word;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-4 {
+  margin-top: 1rem;
 }
 </style>
