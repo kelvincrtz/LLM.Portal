@@ -6,6 +6,7 @@
                 <ul class="flex gap-4">
                     <li><NuxtLink to="/">Chatbox</NuxtLink></li>
                     <li><NuxtLink to="/persona">Persona</NuxtLink></li>
+                    <li><NuxtLink to="/designGenerator">LD Generator</NuxtLink></li>
                     <li><NuxtLink to="/products" class="btn">Vector Management</NuxtLink></li>
                 </ul>
             </nav>
