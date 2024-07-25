@@ -34,6 +34,9 @@
               placeholder="Enter a topic..."
               class="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
             />
+            
+            <p class="text-gray-500 text-sm mb-4">Examples: saving the planet, car maintenance, healthy eating, productivity tips</p>
+
             <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
               Generate JSON Response
             </button>
