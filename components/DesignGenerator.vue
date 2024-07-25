@@ -38,6 +38,14 @@
               Generate JSON Response
             </button>
             <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
+
+            <!-- Loading Animation -->
+            <!--<div v-if="loading" class="loading-animation">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>-->
+
           </div>
         </div>
         <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
@@ -91,26 +99,27 @@
 <script setup>
 import { ref, computed } from 'vue';
 import Pagination from './Pagination.vue';
+import ThreadService from '@/services/ThreadService';
 
 const assistants = ref([
-  { id: 1, name: 'Assistant 1', model: 'gpt-4' },
-  { id: 2, name: 'Assistant 2', model: 'gpt-3.5' },
-  { id: 3, name: 'Assistant 3', model: 'gpt-3.5' },
-  { id: 4, name: 'Assistant 4', model: 'gpt-3.5' },
-  { id: 5, name: 'Assistant 5', model: 'gpt-3.5' },
-  { id: 6, name: 'Assistant 6', model: 'gpt-3.5' },
-  { id: 7, name: 'Assistant 7', model: 'gpt-3.5' },
-  { id: 8, name: 'Assistant 8', model: 'gpt-3.5' },
-  { id: 9, name: 'Assistant 9', model: 'gpt-3.5' },
-  { id: 10, name: 'Assistant 10', model: 'gpt-3.5' },
-  { id: 11, name: 'Assistant 11', model: 'gpt-3.5' },
-  { id: 12, name: 'Assistant 12', model: 'gpt-3.5' },
-  { id: 13, name: 'Assistant 13', model: 'gpt-3.5' },
-  { id: 14, name: 'Assistant 14', model: 'gpt-3.5' },
+  { id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', name: 'Assistant with json', model: 'gpt-4' },
+  { id: '', name: 'Assistant 2', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 3', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 4', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 5', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 6', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 7', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 8', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 9', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 10', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 11', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 12', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 13', model: 'gpt-3.5' },
+  { id: '', name: 'Assistant 14', model: 'gpt-3.5' },
   // Add more assistants as needed
 ]);
 
-const assistantsPerPage = 5;
+const assistantsPerPage = 10;
 const currentPage = ref(1);
 const totalPages = ref(Math.ceil(assistants.value.length / assistantsPerPage));
 
@@ -120,6 +129,8 @@ const response = ref('');
 const error = ref('');
 const showAlert = ref(false);
 const isEditing = ref(false);
+
+// const loading = false;
 
 const paginatedAssistants = computed(() => {
   const start = (currentPage.value - 1) * assistantsPerPage;
@@ -141,55 +152,32 @@ async function generateResponse() {
   error.value = '';
   response.value = ''; // Clear previous response if any
 
-  // Simulate fetching a detailed JSON response
-  const simulatedResponse = {
-    assistant: selectedAssistant.value.name,
-    topic: topic.value,
-    generatedAt: new Date().toISOString(),
-    data: {
-      summary: `This is a summary for the topic "${topic.value}".`,
-      details: {
-        sections: [
-          {
-            title: "Introduction",
-            content: "This section provides an introduction to the topic.",
-            items: [
-              { id: 1, description: "Key point 1 about the topic." },
-              { id: 2, description: "Key point 2 about the topic." }
-            ]
-          },
-          {
-            title: "Main Content",
-            content: "This section dives deep into the main content of the topic.",
-            items: [
-              { id: 3, description: "Detailed point 1." },
-              { id: 4, description: "Detailed point 2." },
-              { id: 5, description: "Detailed point 3." }
-            ]
-          },
-          {
-            title: "Conclusion",
-            content: "This section provides a conclusion and summary of the topic.",
-            items: [
-              { id: 6, description: "Final key point." }
-            ]
-          }
-        ],
-        relatedTopics: [
-          { id: 1, name: "Related topic 1" },
-          { id: 2, name: "Related topic 2" },
-          { id: 3, name: "Related topic 3" }
-        ],
-        references: [
-          { id: 1, source: "Reference 1", link: "https://example.com/reference1" },
-          { id: 2, source: "Reference 2", link: "https://example.com/reference2" },
-          { id: 3, source: "Reference 3", link: "https://example.com/reference3" }
-        ]
-      }
-    }
-  };
+    // this.loading = true; // Set loading to true before the request
 
-  response.value = JSON.stringify(simulatedResponse, null, 2);
+    // Create the request payload
+    const requestPayload = {
+        role: 'user',
+        content: topic.value,
+        assistant_id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', // Include the selected assistant ID
+        model: 'gpt-3.5-turbo' // TODO: 
+    };
+
+    console.log('Request inspect part 1:', requestPayload); // Log the response to inspect it
+
+    try {
+        const apiResponse = await ThreadService.startJsonThread(requestPayload);
+        console.log('API Response:', apiResponse); // Log the API response
+
+        // Handle the response format correctly
+        if (apiResponse) {
+            response.value = JSON.stringify(apiResponse, null, 2);
+            console.log('Formatted Response:', response.value);
+        } else {
+            console.error('Invalid response format:', apiResponse);
+        }
+    } catch (error) {
+        console.error('Error while fetching response:', error);
+    }
 }
 
 function saveEdit() {
@@ -208,7 +196,7 @@ function changePage(page) {
 
 const formattedResponse = computed(() => {
   try {
-    return JSON.parse(response.value);
+    return JSON.stringify(JSON.parse(response.value), null, 2);
   } catch {
     return response.value;
   }
@@ -293,5 +281,38 @@ const formattedResponse = computed(() => {
 }
 .mt-2 {
   margin-top: 0.5rem;
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px; /* Adjust height as needed */
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background-color: #667eea;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite both;
+}
+
+.dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+    transform: scale(0);
+    }
+    40% {
+    transform: scale(1);
+    }
 }
 </style>

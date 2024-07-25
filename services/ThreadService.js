@@ -42,6 +42,22 @@ export default {
     }
   },
 
+  async startJsonThread(request) {
+    try {
+      const response = await $fetch(`${getBaseUrl()}/threads/json`, {
+        method: 'POST',
+        body: JSON.stringify(request),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating json thread:', error);
+      throw error;
+    }
+  },
+
   async deleteThread(id) {
     try {
       const response = await $fetch(`${getBaseUrl()}/threads/${id}`, {
@@ -58,7 +74,6 @@ export default {
   async getThreadMessages(threadId) {
     try {
       const response = await $fetch(`${getBaseUrl()}/messages/${threadId}`);
-      //console.log(response.message);
       return response;
     } catch (error) {
       console.error('Error listing message thread:', error);
