@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick  } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import AssistantService from '@/services/AssistantService';
 import ThreadService from '@/services/ThreadService';
 import Pagination from './Pagination.vue';
@@ -251,35 +251,20 @@ const changeAssistantPage = (page) => {
 };
 
 const scrollToBottom = () => {
-  const messagesContainer = document.querySelector('#messagesContainer');
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-};
-
-// Computed properties
-const messagesWithRoleClasses = computed(() => {
-  return messages.value.map(message => ({
-    ...message,
-    roleClasses: {
-      'text-right': message.role === 'user',
-      'text-left': message.role === 'assistant',
-      'bg-blue-100': message.role === 'user',
-      'text-blue-800': message.role === 'user',
-      'rounded-r-lg': message.role === 'user',
-      'bg-gray-800': message.role === 'assistant',
-      'text-white': message.role === 'assistant',
-      'rounded-l-lg': message.role === 'assistant',
-      'p-4': true,
-      'm-0': true,
-      'whitespace-pre-wrap': true,
+  nextTick(() => {
+    const messagesContainer = document.querySelector('#messagesContainer');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } else {
+      console.error('Messages container is null');
     }
-  }));
-});
+  });
+};
 
 // Watchers
 watch(messages, () => {
   scrollToBottom();
 }, { deep: true });
-
 
 const paginatedAssistants = computed(() => {
   const start = (assistantPage.value - 1) * pageSize.value;
