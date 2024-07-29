@@ -152,261 +152,219 @@
   </div>
 </template>
 
-<script>
-  import Pagination from './Pagination.vue'; // Adjust path as necessary
-  import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
-  import FileService from '@/services/FileService';
-  import FileModal from '~/components/Modal.vue';
-  import VectorService from '@/services/VectorService';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import Pagination from './Pagination.vue'; // Adjust path as necessary
+import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
+import FileService from '@/services/FileService';
+import VectorService from '@/services/VectorService';
 
-  const isModalVisible = ref(false);
-  const selectedFileId = ref(null);
+const isModalVisible = ref(false);
+const selectedFileId = ref(null);
 
-  export default {
-    components: {
-        Pagination,
-        FileModal
-    },
+const form = ref({
+  name: '',
+  instructions: '',
+  model: 'gpt-4o',
+  files: [],
+  tools: '',
+  vectorStore: ''
+});
 
-    data() {
-      return {
-        form: {
-          name: '',
-          instructions: '', // Add instructions field
-          model: 'gpt-4o', // Default value for model
-          files: [], // Initialize as an empty array
-          tools: '',
-          vectorStore: '' // Add vectorStore field
-        },
+const assistants = ref([]);
+const vectorStores = ref([]);
+const editingIndex = ref(-1);
 
-        assistants: [],
-        vectorStores: [], // Initialize vectorStores array
-        editingIndex: -1,
+const currentPage = ref(1);
+const pageSize = ref(4);
 
-        currentPage: 1, // Current page for assistants
-        pageSize: 4, // Number of assistants per page
+const currentPageVectorStore = ref(1);
+const pageSizeVectorStore = ref(4);
 
-        currentPageVectorStore: 1, // Current page for vectors
-        pageSizeVectorStore: 4, // Set the page size for vector stores
+const expandedInstructions = ref({});
 
-        selectedFileId: null,
-        isModalVisible: false,
-        expandedInstructions: {} // Keeps track of expanded instructions
-      };
-    },
+const fetchAssistants = async () => {
+  try {
+    assistants.value = await AssistantService.getAllAssistants();
+  } catch (error) {
+    console.error('Error fetching assistants:', error);
+  }
+};
 
-    mounted() {
-      this.fetchAssistants();
-      this.fetchVectorStores();
-    },
+const fetchVectorStores = async () => {
+  try {
+    const response = await VectorService.listVectorStores();
+    console.log('Vector Stores:', response); // Log the response to verify structure
+    vectorStores.value = response.message; // Adjust based on actual API response structure
+  } catch (error) {
+    console.error('Error fetching vector stores:', error);
+  }
+};
 
-    computed: {
-      // Calculate paginated assistants based on currentPage and pageSize
-      paginatedAssistants() {
-        const start = (this.currentPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        return this.assistants.slice(start, end);
-      },
-      // Calculate total number of pages
-      totalPages() {
-        return Math.ceil(this.assistants.length / this.pageSize);
-      },
+onMounted(async () => {
+  await fetchAssistants();
+  await fetchVectorStores();
+});
 
-      paginatedVectorStores() {
-      const start = (this.currentPageVectorStore - 1) * this.pageSizeVectorStore;
-      const end = start + this.pageSizeVectorStore;
-      return this.vectorStores.slice(start, end);
-      },
-      totalPagesVectorStore() {
-        return Math.ceil(this.vectorStores.length / this.pageSizeVectorStore);
-      }
-    },
+const paginatedAssistants = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return assistants.value.slice(start, end);
+});
 
-    async created() {
-      await this.fetchAssistants(); // Fetch assistants data from the service on component creation
-      await this.fetchVectorStores(); // Fetch vector stores on component creation
-    },
+const totalPages = computed(() => Math.ceil(assistants.value.length / pageSize.value));
 
-    methods: {
-      async fetchAssistants() {
-      try {
-        this.assistants = await AssistantService.getAllAssistants();
-        } catch (error) {
-          console.error('Error fetching assistants:', error);
-        }
-      },
+const paginatedVectorStores = computed(() => {
+  const start = (currentPageVectorStore.value - 1) * pageSizeVectorStore.value;
+  const end = start + pageSizeVectorStore.value;
+  return vectorStores.value.slice(start, end);
+});
 
-      async fetchVectorStores() {
-        try {
-          const response = await VectorService.listVectorStores();
-          console.log('Vector Stores:', response); // Log the response to verify structure
-          this.vectorStores = response.message; // Adjust based on actual API response structure
-        } catch (error) {
-          console.error('Error fetching vector stores:', error);
-        }
-      },
+const totalPagesVectorStore = computed(() => Math.ceil(vectorStores.value.length / pageSizeVectorStore.value));
 
-      async submitForm() {
-        try {
-          let uploadedFiles = [];
+const submitForm = async () => {
+  try {
+    let uploadedFiles = [];
 
-          if (this.form.files && this.form.files.length > 0) {
-            console.log('Uploading files');
+    if (form.value.files && form.value.files.length > 0) {
+      console.log('Uploading files');
+      uploadedFiles = await FileService.uploadFile(form.value.files);
+      console.log('Uploaded files', uploadedFiles);
+    }
 
-            // Upload all files in one go and store the results
-            uploadedFiles = await FileService.uploadFile(this.form.files);
-            console.log('Uploaded files', uploadedFiles);
-            console.log('Files uploaded');
+    const newAssistant = {
+      name: form.value.name,
+      instructions: form.value.instructions,
+      model: form.value.model
+    };
+
+    if (form.value.tools) {
+      newAssistant.tools = [{ type: form.value.tools }];
+      if (form.value.tools === 'file_search') {
+        newAssistant.tool_resources = {
+          file_search: {
+            vector_store_ids: uploadedFiles.id.split(',').map(id => id.trim())
           }
-          
-          // Create an assistant with file search tool and the vector id
-          const newAssistant = {
-            name: this.form.name,
-            instructions: this.form.instructions,
-            model: this.form.model
-          };
-
-          if (this.form.tools) {
-            newAssistant.tools = [{ type: this.form.tools }];
-
-            if (this.form.tools === 'file_search') {
-              newAssistant.tool_resources = {
-                file_search: {
-                  vector_store_ids: uploadedFiles.id.split(',').map(id => id.trim())
-                }
-              };
-            }
-          }
-    
-          if (this.editingIndex === -1) {
-            console.log('Creating new assistant');
-            await AssistantService.createAssistant(newAssistant);
-          } else {
-            console.log('Editing existing assistant');
-            const id = this.assistants[this.editingIndex].id;
-            console.log('Editing assistant ID:', id); // Log the ID
-            await AssistantService.updateAssistant(id, newAssistant);
-          }
-
-          this.clearForm();
-          await this.fetchAssistants();
-        } catch (error) {
-          console.error('Error submitting form:', error);
-        }
-      },
-
-      async editAssistant(index) {
-        console.log('Editing index:', index); // Add this line to log the index
-        this.editingIndex = index;
-        const assistant = this.assistants[index];
-        this.form.name = assistant.name;
-        this.form.instructions = assistant.instructions;
-        this.form.model = assistant.model;
-        this.form.file = null; // Clear the file input
-        this.editingIndex = index;
-      },
-
-      async deleteAssistant(index) {
-        try {
-          const id = this.assistants[index].id;
-          await AssistantService.deleteAssistant(id);
-          this.assistants.splice(index, 1);
-        } catch (error) {
-          console.error('Error deleting assistant:', error);
-        }
-      },
-
-      clearForm() {
-        this.form.name = '';
-        this.form.instructions = ''; // Clear instructions
-        this.form.model = 'gpt-4o'; // Reset model to default
-        this.form.file = null;
-        this.editingIndex = -1;
-      },
-
-      handleFileChange(event) {
-        this.form.files = Array.from(event.target.files);
-      },
-
-      gotoPage(page) {
-        this.currentPage = page;
-      },
-
-      gotoPageVectorStore(page) {
-        this.currentPageVectorStore = page;
-      },
-
-      selectVectorStore(vectorStoreId) {
-        this.form.vectorStore = vectorStoreId;
-      },
-
-      isJSON(str) {
-        try {
-          JSON.parse(str);
-          return true;
-        } catch (e) {
-          return false;
-        }
-      },
-      
-      formatJSON(str) {
-        return JSON.stringify(JSON.parse(str), null, 2);
-      },
-
-      formatInstructions(instructions) {
-        // Split the instructions by the JSON part
-        const regex = /(\{.*\})/s; // Regular expression to match the JSON part
-        const parts = instructions.split(regex);
-
-        return parts
-          .map(part => {
-            if (this.isJSON(part)) {
-              return `<pre>${JSON.stringify(JSON.parse(part), null, 2)}</pre>`;
-            } else {
-              return `<p>${part}</p>`;
-            }
-          })
-          .join('');
-      },
-       
-      toggleInstructions(assistantId) {
-        // Toggle the expanded state of the instructions
-        if (this.expandedInstructions[assistantId]) {
-          this.expandedInstructions = { ...this.expandedInstructions, [assistantId]: false };
-        } else {
-          this.expandedInstructions = { ...this.expandedInstructions, [assistantId]: true };
-        }
-      },
-
-      shouldShowMore(assistant) {
-        const limit = 100;
-        return assistant.instructions.length > limit && !this.expandedInstructions[assistant.id];
-      },
-
-      formattedInstructions(assistant) {
-        const limit = 100;
-        const cleanedInstructions = this.cleanText(assistant.instructions);
-        if (this.expandedInstructions[assistant.id]) {
-          return assistant.instructions;
-        } 
-        if (cleanedInstructions.length <= limit) {
-          return cleanedInstructions;
-        }
-        return cleanedInstructions.substring(0, limit) + '...';
-      },
-
-      cleanText(text) {
-        // Remove excessive spaces and newlines
-        return text.replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/g, '\n');
-      },
-
-      showModal(fileId) {
-        selectedFileId.value = fileId;
-        isModalVisible.value = true;
+        };
       }
     }
-  };
-  </script>
+
+    if (editingIndex.value === -1) {
+      console.log('Creating new assistant');
+      await AssistantService.createAssistant(newAssistant);
+    } else {
+      console.log('Editing existing assistant');
+      const id = assistants.value[editingIndex.value].id;
+      await AssistantService.updateAssistant(id, newAssistant);
+    }
+
+    clearForm();
+    await fetchAssistants();
+  } catch (error) {
+    console.error('Error submitting form:', error);
+  }
+};
+
+const editAssistant = (index) => {
+  editingIndex.value = index;
+  const assistant = assistants.value[index];
+  form.value.name = assistant.name;
+  form.value.instructions = assistant.instructions;
+  form.value.model = assistant.model;
+  form.value.file = null;
+};
+
+const deleteAssistant = async (index) => {
+  try {
+    const id = assistants.value[index].id;
+    await AssistantService.deleteAssistant(id);
+    assistants.value.splice(index, 1);
+  } catch (error) {
+    console.error('Error deleting assistant:', error);
+  }
+};
+
+const clearForm = () => {
+  form.value.name = '';
+  form.value.instructions = '';
+  form.value.model = 'gpt-4o';
+  form.value.file = null;
+  editingIndex.value = -1;
+};
+
+const handleFileChange = (event) => {
+  form.value.files = Array.from(event.target.files);
+};
+
+const gotoPage = (page) => {
+  currentPage.value = page;
+};
+
+const gotoPageVectorStore = (page) => {
+  currentPageVectorStore.value = page;
+};
+
+const selectVectorStore = (vectorStoreId) => {
+  form.value.vectorStore = vectorStoreId;
+};
+
+const isJSON = (str) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+const formatJSON = (str) => {
+  return JSON.stringify(JSON.parse(str), null, 2);
+};
+
+const formatInstructions = (instructions) => {
+  const regex = /(\{.*\})/s;
+  const parts = instructions.split(regex);
+  return parts
+    .map(part => {
+      if (isJSON(part)) {
+        return `<pre>${JSON.stringify(JSON.parse(part), null, 2)}</pre>`;
+      } else {
+        return `<p>${part}</p>`;
+      }
+    })
+    .join('');
+};
+
+const toggleInstructions = (assistantId) => {
+  expandedInstructions.value = { ...expandedInstructions.value, [assistantId]: !expandedInstructions.value[assistantId] };
+};
+
+const shouldShowMore = (assistant) => {
+  const limit = 100;
+  return assistant.instructions.length > limit && !expandedInstructions.value[assistant.id];
+};
+
+const formattedInstructions = (assistant) => {
+  const limit = 100;
+  const cleanedInstructions = cleanText(assistant.instructions);
+  if (expandedInstructions.value[assistant.id]) {
+    return assistant.instructions;
+  }
+  if (cleanedInstructions.length <= limit) {
+    return cleanedInstructions;
+  }
+  return `${cleanedInstructions.substring(0, limit)}...`;
+};
+
+const cleanText = (text) => {
+  return text.replace(/\s\s+/g, ' ').replace(/(\r\n|\n|\r)/g, '\n');
+};
+
+const showModal = (fileId) => {
+  selectedFileId.value = fileId;
+  isModalVisible.value = true;
+};
+</script>
   
   <style scoped>
   .container {
