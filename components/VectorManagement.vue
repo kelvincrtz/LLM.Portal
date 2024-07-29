@@ -78,21 +78,46 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue';
-  import VectorService from '@/services/VectorService';
+  import { ref } from 'vue';
   
   const activeTab = ref('stores');
-  const vectorStores = ref([]);
-  const vectorFiles = ref([]);
   
-  const fetchData = async () => {
-    vectorStores.value = await VectorService.getVectorStores();
-    vectorFiles.value = await VectorService.getVectorFiles();
-  };
+  // Example data for Vector Stores
+  const vectorStores = ref([
+    {
+      id: 'store_1',
+      name: 'Store A',
+      description: 'Description of Store A',
+      files: [
+        { id: 'file_1', name: 'File A', type: 'CSV' },
+        { id: 'file_2', name: 'File B', type: 'JSON' }
+      ],
+      assistants: [
+        { id: 'asst_1', name: 'Assistant 1' },
+        { id: 'asst_2', name: 'Assistant 2' }
+      ]
+    },
+    {
+      id: 'store_2',
+      name: 'Store B',
+      description: 'Description of Store B',
+      files: [
+        { id: 'file_3', name: 'File C', type: 'TXT' },
+        { id: 'file_4', name: 'File D', type: 'PDF' }
+      ],
+      assistants: [
+        { id: 'asst_3', name: 'Assistant 3' }
+      ]
+    }
+  ]);
   
-  onMounted(() => {
-    fetchData();
-  });
+  // Example data for Vector Files
+  const vectorFiles = ref([
+    { id: 'file_1', name: 'File A', type: 'CSV', size: 10 },
+    { id: 'file_2', name: 'File B', type: 'JSON', size: 5 },
+    { id: 'file_3', name: 'File C', type: 'TXT', size: 2 },
+    { id: 'file_4', name: 'File D', type: 'PDF', size: 15 }
+  ]);
   </script>
   
   <style scoped>
