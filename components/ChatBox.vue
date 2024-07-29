@@ -63,7 +63,7 @@
         </div>
         
         <!-- Messages -->
-        <div ref="messagesContainer" class="messages">
+        <div ref="messagesContainer" id="messagesContainer" class="messages">
           <div v-for="(message, index) in messages" :key="index" :class="message.role">
             <p v-html="formatMessage(message.content)"></p>
           </div>
@@ -90,266 +90,217 @@
   </div>
 </template>
 
-<script>
-  import AssistantService from '@/services/AssistantService';
-  import ThreadService from '@/services/ThreadService';
-  import Pagination from './Pagination.vue';
+<script setup>
+import { ref, computed, onMounted, watch, nextTick  } from 'vue';
+import AssistantService from '@/services/AssistantService';
+import ThreadService from '@/services/ThreadService';
+import Pagination from './Pagination.vue';
 
-  export default {
-    components: {
-      Pagination,
-    },
+// Constants
+const PAGE_SIZE = 5;
 
-    data() {
-      return {
-        newMessage: '',
-        messages: [],
-        assistants: [
-          { id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', name: 'Assistant 1', description: 'Description of Assistant 1' },
-          { id: 'asst_RdiEte1pFnR77JuUBEpGtrJA', name: 'Assistant 2', description: 'Rain Assistant 2' },
-          { id: '', name: 'Assistant 3', description: 'Description of Assistant 3' },
-          { id: '', name: 'Assistant 4', description: 'Description of Assistant 4' },
-          { id: '', name: 'Assistant 5', description: 'Description of Assistant 5' },
-          // Add more assistants as needed
-        ],
-        threads: [
-          { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Description of Thread 1 with data' },
-          { id: 'thread_ySUjQDaLklC3RPOjrDk7BT3q', name: 'About weather thread', description: 'Description of Thread 2 data' },
-          { id: 'thread_BsHPvqkm5MwlLiBagex4jGqz', name: 'About NZ weather', description: 'Description of Thread 3 data' },
-          // Add more threads as needed
-        ],
+const initialThreads = [
+  { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Description of Thread 1 with data' },
+  { id: 'thread_ySUjQDaLklC3RPOjrDk7BT3q', name: 'About weather thread', description: 'Description of Thread 2 data' },
+  { id: 'thread_BsHPvqkm5MwlLiBagex4jGqz', name: 'About NZ weather', description: 'Description of Thread 3 data' },
+];
 
-        assistantPage: 1,
-        threadPage: 1,
-        pageSize: 5,
+const newMessage = ref('');
+const messages = ref([]);
+const assistants = ref([]);
+const threads = ref(initialThreads);
 
-        selectedAssistant: null,
-        selectedThread: null,
+const assistantPage = ref(1);
+const threadPage = ref(1);
+const pageSize = ref(PAGE_SIZE);
 
-        file: null,
+const selectedAssistant = ref(null);
+const selectedThread = ref(null);
 
-        loading: false,
-      };
-    },
+const file = ref(null);
 
-    async created() {
-      await this.loadAssistants();
-      // await this.loadThreads(); // TODO:
-    },
+const loading = ref(false);
 
-    methods: {
-      async sendMessage() {
-        if (this.newMessage.trim() === '') return;
+// Methods
+const sendMessage = async () => {
+  if (newMessage.value.trim() === '') return;
 
-        if (!this.selectedAssistant) {
-            console.error('No assistant selected.');
-            return;
-        }
+  if (!selectedAssistant.value) {
+    console.error('No assistant selected.');
+    return;
+  }
 
-        this.loading = true; // Set loading to true before the request
+  loading.value = true;
 
-        // Create the request payload
-        const requestPayload = {
-            role: 'user',
-            content: this.newMessage,
-            assistant_id: this.selectedAssistant.id, // Include the selected assistant ID
-            model: 'gpt-3.5-turbo' // TODO: 
-        };
-
-        // Add the user message to the messages array
-        const userMessage = {
-            role: 'user',
-            content: this.newMessage
-        };
-        this.messages.push(userMessage);
-        this.newMessage = ''; // Clear the input field
-        this.file = null; // Clear the file input
-
-        try {
-          let response;
-
-          if (this.selectedThread) {
-              // Continue the existing thread
-              response = await ThreadService.continueThread(this.selectedThread.id, requestPayload);
-          } else {
-              // Create a new thread
-              response = await ThreadService.startNewThread(requestPayload);
-
-              // After creating a new thread, set it as the selected thread
-              this.selectedThread = response.thread; // Assuming the API response contains the new thread details
-              
-              // Optionally, update your messages to include the initial response
-              const initialMessage = {
-                  role: response.initialMessage.role,
-                  content: response.initialMessage.content
-              };
-              this.messages.push(initialMessage);
-          }
-
-          console.log('API Response:', response); // Log the response to inspect it
-
-          // Handle the response format correctly
-          if (response && response.content && response.content.length > 0) {
-              const botMessageData = response; // Directly use the response
-
-              // Extract content from the array
-              const botMessageContent = botMessageData.content.map(item => item.text.value).join(' ');
-              const botMessage = {
-                  role: botMessageData.role,
-                  content: botMessageContent
-              };
-
-              // Add the bot message to the messages array
-              this.messages.push(botMessage);
-              this.loading = false; // Set loading to false after the response
-          } else {
-              console.error('Invalid response format:', response);
-          }
-          } catch (error) {
-              console.error('Error sending message:', error);
-          }
-      },
-
-      formatMessage(message) {
-        if (Array.isArray(message)) {
-          // Join array content into a single string
-          message = message.map(item => item.text.value).join(' ');
-        }
-
-        // Convert new lines and spaces into HTML
-        return message
-          .replace(/\n/g, '<br>')
-          .replace(/ {2,}/g, match => '&nbsp;'.repeat(match.length));
-      },
-
-      isCodeBlock(message) {
-        // return message.startsWith('```') && content.endsWith('```');
-        // Implement logic if you have specific markers for code blocks
-        // For this example, assume it's not a code block
-        // return false;
-      },
-
-      selectThread(thread) {
-        this.selectedThread = thread;
-        // Load messages for the selected thread
-        this.loadThreadMessages(thread.id); // Load messages for the selected thread
-      },
-
-      async loadThreadMessages(threadId) {
-        try {
-          const response = await ThreadService.getThreadMessages(threadId);
-          this.messages = response.message;
-        } catch (error) {
-          console.error('Error loading thread messages:', error);
-        }
-      },
-      
-      //changeAssistantPage(page) {
-      //  console.log('Changing Assistant Page to:', page); // Debug message
-      //  this.assistantPage = page;
-      //},
-
-      changeThreadPage(page) {
-        console.log('Changing Thread Page to:', page); // Debug message
-        this.threadPage = page;
-      },
-
-      handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-          this.file = file;
-        }
-      },
-
-      triggerFileInput() {
-        this.$refs.fileInput.click();
-      },
-
-      async loadAssistants() {
-        const allAssistants = await AssistantService.getAllAssistants();
-        this.assistants = allAssistants;
-        this.updatePagination();
-      },
-      
-      updatePagination() {
-        // Update paginated assistants based on current page
-        const start = (this.assistantPage - 1) * 10; // Assuming 10 per page
-        const end = start + 10;
-        this.paginatedAssistants = this.assistants.slice(start, end);
-        this.assistantTotalPages = Math.ceil(this.assistants.length / 10);
-      },
-
-      updateThreadPagination() {
-        const start = (this.threadPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        this.paginatedThreads = this.threads.slice(start, end);
-        this.threadTotalPages = Math.ceil(this.threads.length / this.pageSize);
-      },
-
-      selectAssistant(assistant) {
-        this.selectedAssistant = assistant;
-      },
-
-      changeAssistantPage(page) {
-        this.assistantPage = page;
-        this.updatePagination();
-      },
-
-      scrollToBottom() {
-        const messagesContainer = this.$refs.messagesContainer;
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      },
-    },
-
-    computed: {
-      // Dynamically set Tailwind CSS classes based on message role
-      messagesWithRoleClasses() {
-        return this.messages.map(message => ({
-          ...message,
-          roleClasses: {
-            'text-right': message.role === 'user',
-            'text-left': message.role === 'assistant',
-            'bg-blue-100': message.role === 'user',
-            'text-blue-800': message.role === 'user',
-            'rounded-r-lg': message.role === 'user',
-            'bg-gray-800': message.role === 'assistant',
-            'text-white': message.role === 'assistant',
-            'rounded-l-lg': message.role === 'assistant',
-            'p-4': true,
-            'm-0': true,
-            'whitespace-pre-wrap': true,
-          }
-        }));
-      },
-      // Dynamically set Tailwind CSS classes based on message text
-      textClasses() {
-        return message => ({
-          'bg-blue-100 text-blue-800': message.role === 'user',
-          'bg-gray-800 text-white': message.role === 'assistant'
-        });
-      },
-      paginatedAssistants() {
-        const start = (this.assistantPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        return this.assistants.slice(start, end);
-      },
-      assistantTotalPages() {
-        return Math.ceil(this.assistants.length / this.pageSize);
-      },
-      paginatedThreads() {
-        const start = (this.threadPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        return this.threads.slice(start, end);
-      },
-      threadTotalPages() {
-        return Math.ceil(this.threads.length / this.pageSize);
-      },
-    },
-    
-    updated() {
-        this.scrollToBottom();
-      }
+  const requestPayload = {
+    role: 'user',
+    content: newMessage.value,
+    assistant_id: selectedAssistant.value.id,
+    model: 'gpt-3.5-turbo'
   };
+
+  const userMessage = {
+    role: 'user',
+    content: newMessage.value
+  };
+  messages.value.push(userMessage);
+  newMessage.value = '';
+  file.value = null;
+
+  try {
+    let response;
+
+    if (selectedThread.value) {
+      response = await ThreadService.continueThread(selectedThread.value.id, requestPayload);
+    } else {
+      response = await ThreadService.startNewThread(requestPayload);
+      selectedThread.value = response.thread;
+      const initialMessage = {
+        role: response.initialMessage.role,
+        content: response.initialMessage.content
+      };
+      messages.value.push(initialMessage);
+    }
+
+    if (response && response.content && response.content.length > 0) {
+      const botMessageContent = response.content.map(item => item.text.value).join(' ');
+      const botMessage = {
+        role: response.role,
+        content: botMessageContent
+      };
+      messages.value.push(botMessage);
+    } else {
+      console.error('Invalid response format:', response);
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const formatMessage = (message) => {
+  if (Array.isArray(message)) {
+    message = message.map(item => item.text.value).join(' ');
+  }
+  return message
+    .replace(/\n/g, '<br>')
+    .replace(/ {2,}/g, match => '&nbsp;'.repeat(match.length));
+};
+
+const selectThread = async (thread) => {
+  selectedThread.value = thread;
+  await loadThreadMessages(thread.id);
+};
+
+const loadThreadMessages = async (threadId) => {
+  try {
+    const response = await ThreadService.getThreadMessages(threadId);
+    messages.value = response.message;
+  } catch (error) {
+    console.error('Error loading thread messages:', error);
+  }
+};
+
+const changeThreadPage = (page) => {
+  threadPage.value = page;
+  updateThreadPagination();
+};
+
+const handleFileUpload = (event) => {
+  const uploadedFile = event.target.files[0];
+  if (uploadedFile) {
+    file.value = uploadedFile;
+  }
+};
+
+const triggerFileInput = () => {
+  document.querySelector('#fileInput').click();
+};
+
+const loadAssistants = async () => {
+  try {
+    assistants.value = await AssistantService.getAllAssistants();
+    updatePagination();
+  } catch (error) {
+    console.error('Error loading assistants:', error);
+  }
+};
+
+const updatePagination = () => {
+  const start = (assistantPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  paginatedAssistants.value = assistants.value.slice(start, end);
+  assistantTotalPages.value = Math.ceil(assistants.value.length / pageSize.value);
+};
+
+const updateThreadPagination = () => {
+  const start = (threadPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  paginatedThreads.value = threads.value.slice(start, end);
+  threadTotalPages.value = Math.ceil(threads.value.length / pageSize.value);
+};
+
+const selectAssistant = (assistant) => {
+  selectedAssistant.value = assistant;
+};
+
+const changeAssistantPage = (page) => {
+  assistantPage.value = page;
+  updatePagination();
+};
+
+const scrollToBottom = () => {
+  const messagesContainer = document.querySelector('#messagesContainer');
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+};
+
+// Computed properties
+const messagesWithRoleClasses = computed(() => {
+  return messages.value.map(message => ({
+    ...message,
+    roleClasses: {
+      'text-right': message.role === 'user',
+      'text-left': message.role === 'assistant',
+      'bg-blue-100': message.role === 'user',
+      'text-blue-800': message.role === 'user',
+      'rounded-r-lg': message.role === 'user',
+      'bg-gray-800': message.role === 'assistant',
+      'text-white': message.role === 'assistant',
+      'rounded-l-lg': message.role === 'assistant',
+      'p-4': true,
+      'm-0': true,
+      'whitespace-pre-wrap': true,
+    }
+  }));
+});
+
+// Watchers
+watch(messages, () => {
+  scrollToBottom();
+}, { deep: true });
+
+
+const paginatedAssistants = computed(() => {
+  const start = (assistantPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return assistants.value.slice(start, end);
+});
+
+const assistantTotalPages = computed(() => Math.ceil(assistants.value.length / pageSize.value));
+
+const paginatedThreads = computed(() => {
+  const start = (threadPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return threads.value.slice(start, end);
+});
+
+const threadTotalPages = computed(() => Math.ceil(threads.value.length / pageSize.value));
+
+onMounted(() => {
+  loadAssistants();
+  // loadThreads(); // Implement and call this if needed
+});
 </script>
   
 <style scoped>
