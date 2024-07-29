@@ -17,7 +17,7 @@
               <NuxtLink to="/designGenerator" class="block py-2 px-4 rounded hover:bg-indigo-600 transition-colors duration-300">LD Generator</NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/vectors" class="block py-2 px-4 rounded hover:bg-indigo-600 transition-colors duration-300">Vector Management</NuxtLink>
+              <NuxtLink to="/vectorManagement" class="block py-2 px-4 rounded hover:bg-indigo-600 transition-colors duration-300">Vector Management</NuxtLink>
             </li>
           </ul>
         </nav>
