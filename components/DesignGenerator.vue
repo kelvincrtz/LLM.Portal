@@ -1,100 +1,102 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <!-- Heading -->
-    <div class="p-4 bg-white border-b border-gray-00 shadow-md rounded-t-md">
-      <h1 class="text-2xl font-semibold">Learning Design Generator</h1>
-    </div>
-
-    <div class="flex p-4">
-      <!-- Assistant List -->
-      <div class="w-1/4 p-4 bg-white border-r border-gray-300 shadow-md rounded-md">
-        <h2 class="text-xl font-semibold mb-4">Assistants</h2>
-        <ul>
-          <li
-            v-for="assistant in paginatedAssistants"
-            :key="assistant.id"
-            @click="selectAssistant(assistant)"
-            :class="{'bg-gray-200': selectedAssistant && selectedAssistant.id === assistant.id}"
-            class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
-          >
-            <h3 class="font-medium">{{ assistant.name || 'Name undefined' }}</h3>
-            <p class="text-sm text-gray-500">{{ assistant.id }}</p>
-            <p class="text-sm text-gray-500">{{ assistant.model }}</p>
-          </li>
-        </ul>
-        <Pagination 
-          :current-page="currentPage" 
-          :total-pages="totalPages" 
-          @page-changed="changePage"
-        />
+  <div class="min-h-screen bg-gray-100 p-4 flex justify-center">
+    <div class="w-full max-w-7xl bg-white p-6 rounded-lg shadow-md">
+      <!-- Heading -->
+      <div class="p-4 border-b border-gray-300">
+        <h1 class="text-2xl font-semibold">Learning Design Generator</h1>
       </div>
 
-      <!-- Interaction Section -->
-      <div class="w-3/4 p-4 bg-white shadow-md rounded-md ml-4">
-        <div class="mb-4">
-          <h2 class="text-xl font-semibold mb-4">
-            {{ selectedAssistant ? (selectedAssistant.name || selectedAssistant.id) : 'No Assistant Selected' }}
-          </h2>
-          <div v-if="selectedAssistant">
-            <textarea
-              v-model="topic"
-              placeholder="Enter a topic..."
-              class="w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
-              rows="3"
-            ></textarea>
-            <!-- Example Topics -->
-            <p class="text-gray-500 text-sm mb-4">Examples: saving the planet, car maintenance, healthy eating, productivity tips</p>
+      <div class="flex">
+        <!-- Assistant List -->
+        <div class="w-1/4 p-4 border-r border-gray-300">
+          <h2 class="text-xl font-semibold mb-4">Assistants</h2>
+          <ul>
+            <li
+              v-for="assistant in paginatedAssistants"
+              :key="assistant.id"
+              @click="selectAssistant(assistant)"
+              :class="{'bg-gray-200': selectedAssistant && selectedAssistant.id === assistant.id}"
+              class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
+            >
+              <h3 class="font-medium">{{ assistant.name || 'Name undefined' }}</h3>
+              <p class="text-sm text-gray-500">{{ assistant.id }}</p>
+              <p class="text-sm text-gray-500">{{ assistant.model }}</p>
+            </li>
+          </ul>
+          <Pagination 
+            :current-page="currentPage" 
+            :total-pages="totalPages" 
+            @page-changed="changePage"
+          />
+        </div>
 
-            <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
-              Generate JSON Response
-            </button>
-            <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
+        <!-- Interaction Section -->
+        <div class="w-3/4 p-4">
+          <div class="mb-4">
+            <h2 class="text-xl font-semibold mb-4">
+              {{ selectedAssistant ? (selectedAssistant.name || selectedAssistant.id) : 'No Assistant Selected' }}
+            </h2>
+            <div v-if="selectedAssistant">
+              <textarea
+                v-model="topic"
+                placeholder="Enter a topic..."
+                class="w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                rows="3"
+              ></textarea>
+              <!-- Example Topics -->
+              <p class="text-gray-500 text-sm mb-4">Examples: saving the planet, car maintenance, healthy eating, productivity tips</p>
 
-            <!-- Loading Animation -->
-            <div v-if="loading" class="loading-animation">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
+              <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+                Generate JSON Response
+              </button>
+              <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
+
+              <!-- Loading Animation -->
+              <div v-if="loading" class="loading-animation">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
-          <h3 class="text-lg font-semibold mb-2">Generated JSON Response</h3>
-          <pre v-if="!isEditing" class="whitespace-pre-wrap break-words">{{ formattedResponse }}</pre>
-          <textarea
-            v-if="isEditing"
-            v-model="response"
-            class="w-full p-2 border border-gray-300 rounded bg-gray-100"
-            rows="40"
-          ></textarea>
-          <div class="mt-4">
-            <button
-              v-if="!isEditing"
-              @click="isEditing = true"
-              class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-700 mr-2"
-            >
-              Edit JSON
-            </button>
-            <button
+          <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
+            <h3 class="text-lg font-semibold mb-2">Generated JSON Response</h3>
+            <pre v-if="!isEditing" class="whitespace-pre-wrap break-words">{{ formattedResponse }}</pre>
+            <textarea
               v-if="isEditing"
-              @click="saveEdit"
-              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700 mr-2"
-            >
-              Save Edit
-            </button>
-            <button
-              v-if="isEditing"
-              @click="cancelEdit"
-              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 mr-2"
-            >
-              Cancel
-            </button>
-            <button
-              @click="generateResponse"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-            >
-              Generate New Response
-            </button>
+              v-model="response"
+              class="w-full p-2 border border-gray-300 rounded bg-gray-100"
+              rows="40"
+            ></textarea>
+            <div class="mt-4">
+              <button
+                v-if="!isEditing"
+                @click="isEditing = true"
+                class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-700 mr-2"
+              >
+                Edit JSON
+              </button>
+              <button
+                v-if="isEditing"
+                @click="saveEdit"
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700 mr-2"
+              >
+                Save Edit
+              </button>
+              <button
+                v-if="isEditing"
+                @click="cancelEdit"
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                @click="generateResponse"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+              >
+                Generate New Response
+              </button>
+            </div>
           </div>
         </div>
       </div>

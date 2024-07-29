@@ -49,6 +49,9 @@
           />
         </div>
       </div>
+      
+      <!-- Divider Line -->
+      <div class="divider"></div>
 
       <!-- Chat Content -->
       <div class="chat-content">
@@ -63,8 +66,6 @@
         <div ref="messagesContainer" class="messages">
           <div v-for="(message, index) in messages" :key="index" :class="message.role">
             <p v-html="formatMessage(message.content)"></p>
-            <!-- If you have specific handling for code blocks, you can adjust this part -->
-            <!-- <pre v-if="isCodeBlock(message.content)"><code>{{ message.content }}</code></pre> -->
           </div>
           <!-- Loading Animation -->
           <div v-if="loading" class="loading-animation">
@@ -351,120 +352,126 @@
   };
 </script>
   
-  <style scoped>
-  .chat-container {
-    @apply flex justify-center items-center h-screen bg-gray-100;
-  }
+<style scoped>
+.chat-container {
+  @apply flex justify-center items-center h-screen bg-gray-100;
+}
 
-  .chat-box {
-    width: 90%;
-    height: 90%;
-    @apply bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden flex;
-  }
+.chat-box {
+  width: 90%;
+  height: 90%;
+  @apply bg-white shadow-lg rounded-lg overflow-hidden flex;
+}
 
-  .left-sidebar {
-    @apply w-1/3 p-4 border-r border-gray-300 overflow-y-auto bg-gray-100 flex flex-col;
-  }
-  
-  .assistant-view, .threads-view {
-    @apply flex-1;
-  }
-  
-  .assistant-view ul, .threads-view ul {
-    @apply list-none p-0;
-  }
-  
-  .assistant-view li, .threads-view li {
-    @apply cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100;
-  }
-  
-  .assistant-view li.selected, .threads-view li.selected {
-    @apply bg-gray-200;
-  }
-  
-  .chat-content {
-    @apply flex flex-col flex-1;
-  }
-  
-  .chat-header {
-    @apply bg-white;
-  }
-  
-  .messages {
-    @apply flex-grow p-6 overflow-y-auto bg-gray-200 gap-4 whitespace-normal;
-  }
-  
-  .user p, .user pre {
-    @apply self-end bg-blue-100 text-blue-800 rounded-r-lg p-4 m-0 whitespace-pre-wrap;
-  }
-  
-  .assistant p, .assistant pre {
-    @apply self-start bg-gray-800 text-white rounded-l-lg p-4 m-0 whitespace-pre-wrap;
-  }
-  
-  .input-box {
-    @apply flex items-center p-4 border-t border-gray-300;
-  }
-  
-  .input-box .input-field {
-    @apply flex-1 py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring focus:ring-blue-200;
-  }
-  
-  .input-box .action-buttons {
-    @apply flex items-center gap-2 ml-4;
-  }
-  
-  .input-box .send-button {
-    @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
-  }
-  
-  .input-box .file-button {
-    @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
-  }
-  
-  input[type="file"] {
-    @apply hidden;
-  }
-  
-  /* Code block styling */
-  pre {
-    @apply bg-gray-900 text-white rounded-lg p-4 overflow-x-auto;
-  }
-  
-  code {
-    @apply font-mono;
-  }
+.left-sidebar {
+  @apply w-1/3 p-4 bg-white shadow-lg overflow-y-auto flex flex-col;
+}
 
-  .loading-animation {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 50px; /* Adjust height as needed */
-  }
+.assistant-view, .threads-view {
+  @apply flex-1;
+}
 
-  .dot {
-    width: 10px;
-    height: 10px;
-    margin: 0 5px;
-    background-color: #667eea;
-    border-radius: 50%;
-    animation: bounce 1.4s infinite both;
-  }
+.assistant-view ul, .threads-view ul {
+  @apply list-none p-0;
+}
 
-  .dot:nth-child(1) {
-    animation-delay: -0.32s;
-  }
+.assistant-view li, .threads-view li {
+  @apply cursor-pointer p-2 mb-2 rounded hover:bg-gray-100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+}
 
-  .dot:nth-child(2) {
-    animation-delay: -0.16s;
-  }
+.assistant-view li.selected, .threads-view li.selected {
+  @apply bg-gray-200;
+}
 
-  @keyframes bounce {
-    0%, 80%, 100% {
-      transform: scale(0);
-    }
-    40% {
-      transform: scale(1);
-    }
+.chat-content {
+  @apply flex flex-col flex-1;
+}
+
+.chat-header {
+  @apply bg-white;
+}
+
+.messages {
+  @apply flex-grow p-6 overflow-y-auto bg-gray-200 gap-4 whitespace-normal;
+}
+
+.user p, .user pre {
+  @apply self-end bg-blue-100 text-blue-800 rounded-r-lg p-4 m-0 whitespace-pre-wrap;
+}
+
+.assistant p, .assistant pre {
+  @apply self-start bg-gray-800 text-white rounded-l-lg p-4 m-0 whitespace-pre-wrap;
+}
+
+.input-box {
+  @apply flex items-center p-4 border-t border-gray-300;
+}
+
+.input-box .input-field {
+  @apply flex-1 py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring focus:ring-blue-200;
+}
+
+.input-box .action-buttons {
+  @apply flex items-center gap-2 ml-4;
+}
+
+.input-box .send-button {
+  @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
+}
+
+.input-box .file-button {
+  @apply py-2 px-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200;
+}
+
+input[type="file"] {
+  @apply hidden;
+}
+
+/* Code block styling */
+pre {
+  @apply bg-gray-900 text-white rounded-lg p-4 overflow-x-auto;
+}
+
+code {
+  @apply font-mono;
+}
+
+.loading-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px; /* Adjust height as needed */
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  background-color: #667eea;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
   }
-  </style>
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Divider Line */
+.divider {
+  @apply w-px bg-gray-300;
+}
+</style>
