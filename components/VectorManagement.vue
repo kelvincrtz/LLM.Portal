@@ -24,7 +24,7 @@
             <button
               v-if="activeTab === 'stores'"
               @click="createStore"
-              class="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
             >
               Create New Vector Store
             </button>
@@ -71,9 +71,9 @@
             </div>
             <!-- Pagination Controls -->
             <Pagination 
-              :current-page="currentStorePage" 
+              :current-page="currentVectorStorePage" 
               :total-pages="totalStorePages" 
-              @page-changed="changeStorePage"
+              @page-changed="changeVectorStorePage"
             />
           </div>
           <div v-else>
@@ -97,9 +97,9 @@
             </div>
             <!-- Pagination Controls -->
             <Pagination 
-              :current-page="currentFilePage" 
-              :total-pages="totalFilePages" 
-              @page-changed="changeFilePage"
+              :current-page="currentVectorFilePage" 
+              :total-pages="totalVectorFilePages" 
+              @page-changed="changeVectorFilePage"
             />
           </div>
           <div v-else>
@@ -156,33 +156,33 @@
   ]);
   
   // Pagination settings for Vector Stores
-  const itemsPerPageStore = 2;
-  const currentStorePage = ref(1);
-  const totalStorePages = computed(() => Math.ceil(vectorStores.value.length / itemsPerPageStore));
+  const itemsPerVectorPageStore = 2;
+  const currentVectorStorePage = ref(1);
+  const totalStorePages = computed(() => Math.ceil(vectorStores.value.length / itemsPerVectorPageStore));
   
   const paginatedVectorStores = computed(() => {
-    const start = (currentStorePage.value - 1) * itemsPerPageStore;
-    const end = start + itemsPerPageStore;
+    const start = (currentVectorStorePage.value - 1) * itemsPerVectorPageStore;
+    const end = start + itemsPerVectorPageStore;
     return vectorStores.value.slice(start, end);
   });
   
-  function changeStorePage(page) {
-    currentStorePage.value = page;
+  function changeVectorStorePage(page) {
+    currentVectorStorePage.value = page;
   }
   
   // Pagination settings for Vector Files
-  const itemsPerPageFile = 3;
-  const currentFilePage = ref(1);
-  const totalFilePages = computed(() => Math.ceil(vectorFiles.value.length / itemsPerPageFile));
+  const itemsPerVectorPageFile = 3;
+  const currentVectorFilePage = ref(1);
+  const totalVectorFilePages = computed(() => Math.ceil(vectorFiles.value.length / itemsPerVectorPageFile));
   
   const paginatedVectorFiles = computed(() => {
-    const start = (currentFilePage.value - 1) * itemsPerPageFile;
-    const end = start + itemsPerPageFile;
+    const start = (currentVectorFilePage.value - 1) * itemsPerVectorPageFile;
+    const end = start + itemsPerVectorPageFile;
     return vectorFiles.value.slice(start, end);
   });
   
-  function changeFilePage(page) {
-    currentFilePage.value = page;
+  function changeVectorFilePage(page) {
+    currentVectorFilePage.value = page;
   }
   
   // CRUD operations for Vector Stores
