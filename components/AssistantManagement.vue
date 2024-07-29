@@ -1,15 +1,13 @@
 <!-- AssistantView.vue -->
 <template>
-    <div class="p-4">
+  <div class="p-4">
     <h1 class="text-2xl font-bold mb-4">Persona Management</h1>
-
     <div class="flex flex-col lg:flex-row lg:space-x-4">
       <div class="flex-1 mb-4 lg:mb-0">
         <h2 class="text-xl font-semibold mb-2">Add/Edit Persona</h2>
         <form @submit.prevent="submitForm" class="space-y-4">
-
-           <!-- Name Field -->
-           <div>
+          <!-- Name Field -->
+          <div>
             <label for="name" class="block mb-2 font-medium">Name</label>
             <input
               type="text"
@@ -30,7 +28,7 @@
               rows="4"
             ></textarea>
           </div>
-          
+
           <!-- Models Field -->
           <div>
             <label for="model" class="block mb-2 font-medium">Model</label>
@@ -42,7 +40,7 @@
               <!-- Add more models as necessary -->
             </select>
           </div>
-          
+
           <!-- Files Field -->
           <div>
             <label for="files" class="block mb-2 font-medium">Files</label>
@@ -144,7 +142,7 @@
         <!-- Modal Component -->
         <Modal :file-id="selectedFileId" :is-visible="isModalVisible" @update:is-visible="isModalVisible = $event" />
       </div>
-      
+
     </div>
   </div>
 </template>

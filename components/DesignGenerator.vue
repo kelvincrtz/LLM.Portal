@@ -12,6 +12,7 @@
             class="cursor-pointer p-2 mb-2 border border-gray-300 rounded hover:bg-gray-100"
           >
             <h3 class="font-medium">{{ assistant.name || 'Name undefined' }}</h3>
+            <p class="text-sm text-gray-500">{{ assistant.id }}</p>
             <p class="text-sm text-gray-500">{{ assistant.model }}</p>
           </li>
         </ul>
@@ -26,15 +27,16 @@
       <div class="w-3/4 p-4">
         <div class="mb-4">
           <h2 class="text-xl font-semibold mb-4">
-            {{ selectedAssistant ? selectedAssistant.name : 'No Assistant Selected' }}
+            {{ selectedAssistant ? (selectedAssistant.name || selectedAssistant.id) : 'No Assistant Selected' }}
           </h2>
           <div v-if="selectedAssistant">
-            <input
+            <textarea
               v-model="topic"
               placeholder="Enter a topic..."
-              class="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
-            />
-            
+              class="w-full p-2 mb-2 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+              rows="3"
+            ></textarea>
+            <!-- Example Topics -->
             <p class="text-gray-500 text-sm mb-4">Examples: saving the planet, car maintenance, healthy eating, productivity tips</p>
 
             <button @click="generateResponse" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
@@ -97,34 +99,18 @@
         Response saved successfully!
       </div>
     </div>
-  </template>
+</template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Pagination from './Pagination.vue';
 import ThreadService from '@/services/ThreadService';
+import AssistantService from '@/services/AssistantService';
 
-const assistants = ref([
-  { id: 'asst_dFN2Ws0M7YbhWjXEyIqifYpQ', name: 'Assistant with json', model: 'gpt-4' },
-  { id: '', name: 'Assistant 2', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 3', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 4', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 5', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 6', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 7', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 8', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 9', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 10', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 11', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 12', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 13', model: 'gpt-3.5' },
-  { id: '', name: 'Assistant 14', model: 'gpt-3.5' },
-  // Add more assistants as needed
-]);
-
+const assistants = ref([]);
 const assistantsPerPage = 10;
 const currentPage = ref(1);
-const totalPages = ref(Math.ceil(assistants.value.length / assistantsPerPage));
+const totalPages = ref(Math.ceil(assistants.value.length / assistantsPerPage)); //
 
 const selectedAssistant = ref(null);
 const topic = ref('');
@@ -132,8 +118,22 @@ const response = ref('');
 const error = ref('');
 const showAlert = ref(false);
 const isEditing = ref(false);
-
 const loading = ref(false);
+
+// Fetch assistants on component mount
+onMounted(async () => {
+  loading.value = true;
+  try {
+    const data = await AssistantService.getAllAssistants();
+    assistants.value = data;
+    totalPages.value = Math.ceil(assistants.value.length / assistantsPerPage);
+  } catch (err) {
+    error.value = 'Failed to load assistants.';
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+});
 
 const paginatedAssistants = computed(() => {
   const start = (currentPage.value - 1) * assistantsPerPage;
