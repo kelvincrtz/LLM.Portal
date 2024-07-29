@@ -110,55 +110,22 @@
     </div>
   </template>
   <script setup>
-  import { ref, computed } from 'vue';
-  import Pagination from './Pagination.vue'; // Ensure you have a Pagination component
+  import { ref, computed, onMounted } from 'vue';
+  import Pagination from './Pagination.vue';
+  import VectorService from '@/services/VectorService';
   
   const activeTab = ref('stores');
+  const error = ref('');
+  const loading = ref(false);
   
-  // Example static data for Vector Stores
-  const vectorStores = ref([
-    {
-      id: 'store_1',
-      name: 'Vector Store 1',
-      description: 'Description for Vector Store 1',
-      files: [
-        { id: 'file_1', name: 'File 1', type: 'txt' },
-        { id: 'file_2', name: 'File 2', type: 'json' }
-      ],
-      assistants: [
-        { id: 'assistant_1', name: 'Assistant A' },
-        { id: 'assistant_2', name: 'Assistant B' }
-      ]
-    },
-    {
-      id: 'store_2',
-      name: 'Vector Store 2',
-      description: 'Description for Vector Store 2',
-      files: [
-        { id: 'file_3', name: 'File 3', type: 'csv' }
-      ],
-      assistants: [
-        { id: 'assistant_3', name: 'Assistant C' }
-      ]
-    },
-    // Add more example stores if needed
-  ]);
-  
-  // Example static data for Vector Files
-  const vectorFiles = ref([
-    { id: 'file_1', name: 'File 1', type: 'txt', size: 1.2 },
-    { id: 'file_2', name: 'File 2', type: 'json', size: 2.3 },
-    { id: 'file_3', name: 'File 3', type: 'csv', size: 3.4 },
-    { id: 'file_4', name: 'File 4', type: 'xml', size: 1.5 },
-    { id: 'file_5', name: 'File 5', type: 'txt', size: 4.6 },
-    { id: 'file_6', name: 'File 6', type: 'json', size: 2.7 },
-    // Add more example files if needed
-  ]);
-  
+
+  const vectorStores = ref([]);
+  const vectorFiles = ref([]);
+
   // Pagination settings for Vector Stores
-  const itemsPerVectorPageStore = 2;
+  const itemsPerVectorPageStore = 4;
   const currentVectorStorePage = ref(1);
-  const totalStorePages = computed(() => Math.ceil(vectorStores.value.length / itemsPerVectorPageStore));
+  let totalStorePages = ref(Math.ceil(vectorStores.value.length / itemsPerVectorPageStore));
   
   const paginatedVectorStores = computed(() => {
     const start = (currentVectorStorePage.value - 1) * itemsPerVectorPageStore;
@@ -166,6 +133,24 @@
     return vectorStores.value.slice(start, end);
   });
   
+
+  // Fetch vector stores
+  onMounted(async () => {
+    loading.value = true;
+    try {
+      const data = await VectorService.listVectorStores();
+      vectorStores.value = data.message;
+      totalStorePages = Math.ceil(vectorStores.value.length / itemsPerVectorPageStore);
+    } catch (err) {
+      error.value = 'Failed to vector stores.';
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+
+    console.log('Vector stores::', vectorStores);
+  });
+
   function changeVectorStorePage(page) {
     currentVectorStorePage.value = page;
   }
