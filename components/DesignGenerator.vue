@@ -1,7 +1,13 @@
 <template>
-    <div class="flex min-h-screen bg-gray-100">
+  <div class="min-h-screen bg-gray-100">
+    <!-- Heading -->
+    <div class="p-4 bg-white border-b border-gray-00 shadow-md rounded-t-md">
+      <h1 class="text-2xl font-semibold">Learning Design Generator</h1>
+    </div>
+
+    <div class="flex p-4">
       <!-- Assistant List -->
-      <div class="w-1/4 p-4 bg-white border-r border-gray-300">
+      <div class="w-1/4 p-4 bg-white border-r border-gray-300 shadow-md rounded-md">
         <h2 class="text-xl font-semibold mb-4">Assistants</h2>
         <ul>
           <li
@@ -22,9 +28,9 @@
           @page-changed="changePage"
         />
       </div>
-  
+
       <!-- Interaction Section -->
-      <div class="w-3/4 p-4">
+      <div class="w-3/4 p-4 bg-white shadow-md rounded-md ml-4">
         <div class="mb-4">
           <h2 class="text-xl font-semibold mb-4">
             {{ selectedAssistant ? (selectedAssistant.name || selectedAssistant.id) : 'No Assistant Selected' }}
@@ -50,7 +56,6 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
             </div>
-
           </div>
         </div>
         <div v-if="response" class="p-4 bg-white border border-gray-300 rounded shadow-lg">
@@ -93,14 +98,14 @@
           </div>
         </div>
       </div>
-  
+
       <!-- Alert for saved response -->
       <div v-if="showAlert" class="fixed bottom-4 right-4 p-4 bg-green-500 text-white rounded shadow-lg">
         Response saved successfully!
       </div>
     </div>
+  </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import Pagination from './Pagination.vue';
