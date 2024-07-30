@@ -39,46 +39,59 @@
         </div>
 
         <!-- Vector Stores Content -->
-        <div v-if="activeTab === 'stores'">
-          <div v-if="vectorStores.length > 0">
-            <div
-              v-for="store in paginatedVectorStores"
-              :key="store.id"
-              class="bg-white p-6 mb-4 rounded-lg shadow-lg transition-transform transform hover:scale-105"
-            >
-              <h3 class="text-xl font-medium mb-2">{{ store.name }}</h3>
-              <p class="text-sm text-gray-600 mb-1">ID: {{ store.id }}</p>
-              <p class="text-sm text-gray-600 mb-1">Created at: {{ formatDate(store.createdAt) }}</p>
-              <p class="text-sm text-gray-600 mb-1">Size: {{ formattedSize(store.bytes) }}</p>
+        <div v-if="activeTab === 'stores'" class="flex">
+          <!-- Left Side: List of Stores -->
+          <div class="w-1/3 pr-4">
+            <div v-if="vectorStores.length > 0">
+              <div
+                v-for="store in paginatedVectorStores"
+                :key="store.id"
+                class="bg-white p-4 mb-4 rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-105"
+                @click="selectStore(store)"
+              >
+                <h3 class="text-lg font-medium mb-1">{{ store.name }}</h3>
+                <p class="text-sm text-gray-600">Size: {{ formattedSize(store.bytes) }}</p>
+              </div>
+              <!-- Pagination Controls -->
+              <Pagination 
+                :current-page="currentVectorStorePage" 
+                :total-pages="totalVectorStorePages" 
+                @page-changed="changeVectorStorePage"
+              />
+            </div>
+            <div v-else>
+              <p class="text-gray-600">No vector stores found.</p>
+            </div>
+          </div>
 
-              <!-- Additional Information -->
+          <!-- Right Side: Store Details -->
+          <div class="w-2/3 pl-4">
+            <div v-if="selectedStore" class="bg-white p-6 rounded-lg shadow-lg">
+              <h3 class="text-2xl font-semibold mb-4">{{ selectedStore.name }}</h3>
+              <div class="text-lg mb-2"><span class="font-semibold">ID:</span> {{ selectedStore.id }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Created at:</span> {{ formatDate(selectedStore.createdAt) }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Size:</span> {{ formattedSize(selectedStore.bytes) }}</div>
               <div class="mt-4">
-                <h4 class="font-semibold mb-2">Files Attached:</h4>
+                <h4 class="text-xl font-semibold mb-2">Files Attached:</h4>
                 <ul class="list-disc list-inside">
-                  <li v-for="file in store.files" :key="file.id" class="text-sm text-gray-600">
+                  <li v-for="file in selectedStore.files" :key="file.id" class="text-lg text-gray-600">
                     {{ file.name }} ({{ file.type }})
-                    <button @click="removeFile(store.id, file.id)" class="text-red-500 ml-2">Delete</button>
+                    <button @click="removeFile(selectedStore.id, file.id)" class="text-red-500 ml-2">Delete</button>
                   </li>
                 </ul>
               </div>
               <div class="mt-4">
-                <h4 class="font-semibold mb-2">Assistants Using This Store:</h4>
+                <h4 class="text-xl font-semibold mb-2">Assistants Using This Store:</h4>
                 <ul class="list-disc list-inside">
-                  <li v-for="assistant in store.assistants" :key="assistant.id" class="text-sm text-gray-600">
+                  <li v-for="assistant in selectedStore.assistants" :key="assistant.id" class="text-lg text-gray-600">
                     {{ assistant.name }}
                   </li>
                 </ul>
               </div>
             </div>
-            <!-- Pagination Controls -->
-            <Pagination 
-              :current-page="currentVectorStorePage" 
-              :total-pages="totalVectorStorePages" 
-              @page-changed="changeVectorStorePage"
-            />
-          </div>
-          <div v-else>
-            <p class="text-gray-600">No vector stores found.</p>
+            <div v-else>
+              <p class="text-gray-600">Select a store to see its details.</p>
+            </div>
           </div>
         </div>
 
@@ -111,15 +124,15 @@
           <!-- Right Side: File Details -->
           <div class="w-2/3 pl-4">
             <div v-if="selectedFile" class="bg-white p-6 rounded-lg shadow-lg">
-              <h3 class="text-xl font-medium mb-2">{{ selectedFile.filename }}</h3>
-              <p class="text-sm text-gray-600 mb-1">ID: {{ selectedFile.id }}</p>
-              <p class="text-sm text-gray-600 mb-1">Size: {{ formattedSize(selectedFile.bytes) }}</p>
-              <p class="text-sm text-gray-600 mb-1">Created at: {{ formatDate(selectedFile.createdAt) }}</p>
-              <p class="text-sm text-gray-600 mb-1">Purpose: {{ selectedFile.purpose }}</p>
-              <p class="text-sm text-gray-600 mb-1">
-                Vector Store ID: {{ selectedFile.vectorStoreId || 'No Vector Store Id' }}
-              </p>
-              <button @click="deleteFile(selectedFile.id)" class="text-red-500 mt-2">Delete</button>
+              <h3 class="text-2xl font-semibold mb-4">{{ selectedFile.filename }}</h3>
+              <div class="text-lg mb-2"><span class="font-semibold">ID:</span> {{ selectedFile.id }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Size:</span> {{ formattedSize(selectedFile.bytes) }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Created at:</span> {{ formatDate(selectedFile.createdAt) }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Purpose:</span> {{ selectedFile.purpose }}</div>
+              <div class="text-lg mb-2"><span class="font-semibold">Vector Store ID:</span> {{ selectedFile.vectorStoreId || 'No Vector Store Id' }}</div>
+              <button @click="deleteFile(selectedFile.id)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 mt-4">
+                Delete
+              </button>
             </div>
             <div v-else>
               <p class="text-gray-600">Select a file to see its details.</p>
@@ -136,12 +149,13 @@
   
   const activeTab = ref('stores');
   const selectedFile = ref(null);
+  const selectedStore = ref(null);
   
   const vectorStores = ref([]);
   const vectorFiles = ref([]);
 
   // Pagination settings for Vector Stores
-  const itemsPerVectorPageStore = 4;
+  const itemsPerVectorPageStore = 10;
   const currentVectorStorePage = ref(1);
 
   // Pagination settings for Vector Files
@@ -253,11 +267,13 @@
     vectorFiles.value = vectorFiles.value.filter(file => file.id !== fileId);
   };
 
-  // Method to select a file
   const selectFile = (file) => {
     selectedFile.value = file;
   };
 
+  const selectStore = (store) => {
+    selectedStore.value = store;
+  };
 
   // Utility function to format file size
   const formattedSize = (bytes) => {
