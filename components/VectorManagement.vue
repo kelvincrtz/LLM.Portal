@@ -165,7 +165,7 @@
   const fetchVectorStores = async () => {
     try {
       const data = await VectorService.listVectorStores();
-      vectorStores.value = data.message;
+      vectorStores.value = data;
     } catch (error) {
       console.error('Failed to fetch vector stores.', error);
     }

@@ -1,6 +1,10 @@
 // services/AssistantService.js
 let BASE_URL;
 
+const VECTOR_STORES_CACHE_KEY = 'vector-store-cache';
+const VECTOR_FILES_CACHE_KEY = 'vector-file-cache';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours'
+
 function getBaseUrl() {
   if (!BASE_URL) {
     const config = useRuntimeConfig();
@@ -13,8 +17,22 @@ function getBaseUrl() {
 export default {
   async listVectorStores() {
     try {
+      // Check if the data is in localStorage and still valid
+      const cachedData = localStorage.getItem(VECTOR_STORES_CACHE_KEY);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const now = new Date().getTime();
+        if (now - timestamp < CACHE_DURATION) {
+          return data;
+        }
+      }
+
       const response = await $fetch(`${getBaseUrl()}/vector_stores`);
-      return response;
+      const data = response.message;
+
+      // Store the new data in localStorage with a timestamp
+      localStorage.setItem(VECTOR_STORES_CACHE_KEY, JSON.stringify({ data, timestamp: new Date().getTime() }));
+      return data;
     } catch (error) {
       console.error('Error fetching vector stores:', error);
       throw error; // Propagate the error back to the caller
@@ -23,8 +41,21 @@ export default {
 
   async listVectorFiles() {
     try {
-      const response = await $fetch(`${getBaseUrl()}/files`);
-      return response;
+      // Check if the data is in localStorage and still valid
+      const cachedData = localStorage.getItem(VECTOR_FILES_CACHE_KEY);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const now = new Date().getTime();
+        if (now - timestamp < CACHE_DURATION) {
+          return data;
+        }
+      }
+
+      const data = await $fetch(`${getBaseUrl()}/files`);
+
+      // Store the new data in localStorage with a timestamp
+      localStorage.setItem(VECTOR_FILES_CACHE_KEY, JSON.stringify({ data, timestamp: new Date().getTime() }));
+      return data;
     } catch (error) {
       console.error('Error fetching vector files:', error);
       throw error; // Propagate the error back to the caller

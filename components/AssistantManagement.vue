@@ -195,7 +195,7 @@ const fetchVectorStores = async () => {
   try {
     const response = await VectorService.listVectorStores();
     console.log('Vector Stores:', response); // Log the response to verify structure
-    vectorStores.value = response.message; // Adjust based on actual API response structure
+    vectorStores.value = response; // Adjust based on actual API response structure
   } catch (error) {
     console.error('Error fetching vector stores:', error);
   }
