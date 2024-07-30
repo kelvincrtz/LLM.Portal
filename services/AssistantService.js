@@ -12,6 +12,9 @@ function getBaseUrl() {
   return BASE_URL;
 }
 
+function updateCache(data) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: new Date().getTime() }));
+}
 
 export default {
   async getAllAssistants() {
@@ -31,7 +34,7 @@ export default {
       const data = response.data;
 
       // Store the new data in localStorage with a timestamp
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: new Date().getTime() }));
+      updateCache(data);
 
       return data;
     } catch (error) {
@@ -49,7 +52,24 @@ export default {
           'Content-Type': 'application/json'
         }
       });
-      return response.data; // Assuming response.data contains the newly created assistant
+  
+      // Get the current cached data
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { data } = JSON.parse(cachedData);
+  
+         // Add the newly created assistant to the beginning of the cached data
+        const updatedData = [response, ...data];
+  
+        // Update the cache with the new data
+        updateCache(updatedData);
+  
+        console.log('Cache updated with new assistant:', updatedData); // Debugging statement
+      } else {
+        // If no cache exists, create it
+        updateCache([response]);
+      }
+      return response; // Assuming response.data contains the newly created assistant
     } catch (error) {
       console.error('Error creating assistant:', error);
       throw error; // Propagate the error back to the caller
@@ -65,7 +85,22 @@ export default {
           'Content-Type': 'application/json'
         }
       });
-      return response.data; // Assuming response.data contains the updated assistant
+      
+      // Get the current cached data
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { data } = JSON.parse(cachedData);
+
+        // Update the assistant in the cached data
+        const updatedData = data.map(assistant =>
+          assistant.id === id ? response : assistant
+        );
+
+        // Update the cache with the new data
+        updateCache(updatedData);
+      }
+
+      return response; // Assuming response.data contains the updated assistant
     } catch (error) {
       console.error(`Error updating assistant with ID ${id}:`, error);
       throw error; // Propagate the error back to the caller
@@ -74,12 +109,22 @@ export default {
 
   async deleteAssistant(id) {
     try {
-      const response = await $fetch(`${getBaseUrl()}/assistants/${id}`, {
-        method: 'DELETE'
-      });
-      return response.data; // Assuming response.data contains success/failure message
+      // Make the delete request
+      await $fetch(`${getBaseUrl()}/assistants/${id}`, { method: 'DELETE' });
+
+      // Get the current cached data
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { data } = JSON.parse(cachedData);
+
+        // Remove the deleted assistant from the cached data
+        const updatedData = data.filter(assistant => assistant.id !== id);
+
+        // Update the cache with the new data
+        updateCache(updatedData);
+      }
     } catch (error) {
-      console.error(`Error deleting assistant with ID ${id}:`, error);
+      console.error('Error deleting assistant:', error);
       throw error; // Propagate the error back to the caller
     }
   }
