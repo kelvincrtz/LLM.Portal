@@ -48,7 +48,8 @@
             >
               <h3 class="text-lg font-medium">{{ store.name }}</h3>
               <p class="text-sm text-gray-600">ID: {{ store.id }}</p>
-              <p class="text-sm text-gray-600">Description: {{ store.description }}</p>
+              <p class="text-sm text-gray-600">Created at: {{ formatDate(store.createdAt) }}</p>
+              <p class="text-sm text-gray-600">Size: {{ formattedSize(store.bytes) }}</p>
   
               <!-- Additional Information -->
               <div class="mt-4">
@@ -89,10 +90,14 @@
               :key="file.id"
               class="bg-white p-4 mb-4 border border-gray-300 rounded shadow-sm"
             >
-              <h3 class="text-lg font-medium">{{ file.name }}</h3>
+              <h3 class="text-lg font-medium">{{ file.filename }}</h3>
               <p class="text-sm text-gray-600">ID: {{ file.id }}</p>
-              <p class="text-sm text-gray-600">Type: {{ file.type }}</p>
-              <p class="text-sm text-gray-600">Size: {{ file.size }} MB</p>
+              <p class="text-sm text-gray-600">Size: {{ formattedSize(file.bytes) }}</p>
+              <p class="text-sm text-gray-600">Created at: {{ formatDate(file.createdAt) }}</p>
+              <p class="text-sm text-gray-600">Purpose: {{ file.purpose }}</p>
+              <p class="text-sm text-gray-600">
+                Vector Store ID: {{ file.vectorStoreId || 'No Vector Store Id' }}
+              </p>
               <button @click="deleteFile(file.id)" class="text-red-500 mt-2">Delete</button>
             </div>
             <!-- Pagination Controls -->
@@ -230,6 +235,30 @@
   
   const deleteFile = (fileId) => {
     vectorFiles.value = vectorFiles.value.filter(file => file.id !== fileId);
+  };
+
+  // Utility function to format file size
+  const formattedSize = (bytes) => {
+    if (bytes < 1024) {
+      return `${bytes} Bytes`; // Display in bytes if less than 1 KB
+    } else if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(2)} KB`; // Display in KB if less than 1 MB
+    } else {
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`; // Display in MB if 1 MB or more
+    }
+  };
+
+  // Utility function to format Unix timestamp to readable date
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   };
   </script>
   
