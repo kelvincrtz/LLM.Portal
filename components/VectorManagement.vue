@@ -72,7 +72,7 @@
             <!-- Pagination Controls -->
             <Pagination 
               :current-page="currentVectorStorePage" 
-              :total-pages="totalStorePages" 
+              :total-pages="totalVectorStorePages" 
               @page-changed="changeVectorStorePage"
             />
           </div>
@@ -115,49 +115,54 @@
   import VectorService from '@/services/VectorService';
   
   const activeTab = ref('stores');
-  const error = ref('');
-  const loading = ref(false);
   
-
   const vectorStores = ref([]);
   const vectorFiles = ref([]);
 
   // Pagination settings for Vector Stores
   const itemsPerVectorPageStore = 4;
   const currentVectorStorePage = ref(1);
-  let totalStorePages = ref(Math.ceil(vectorStores.value.length / itemsPerVectorPageStore));
-  
+
+  // Pagination settings for Vector Files
+  const itemsPerVectorPageFile = 6;
+  const currentVectorFilePage = ref(1);
+
+  const fetchVectorStores = async () => {
+    try {
+      const data = await VectorService.listVectorStores();
+      vectorStores.value = data.message;
+    } catch (error) {
+      console.error('Failed to fetch vector stores.', error);
+    }
+  };
+
+  const fetchVectorFiles = async () => {
+    try {
+      const data = await VectorService.listVectorFiles();
+      vectorFiles.value = data.data;
+    } catch (error) {
+      console.error('Failed to fetch vector files.', error);
+    }
+  };
+
+  // Fetch vector stores
+  onMounted(async () => {
+    await fetchVectorStores();
+    await fetchVectorFiles();
+  });
+
   const paginatedVectorStores = computed(() => {
     const start = (currentVectorStorePage.value - 1) * itemsPerVectorPageStore;
     const end = start + itemsPerVectorPageStore;
     return vectorStores.value.slice(start, end);
   });
-  
 
-  // Fetch vector stores
-  onMounted(async () => {
-    loading.value = true;
-    try {
-      const data = await VectorService.listVectorStores();
-      vectorStores.value = data.message;
-      totalStorePages = Math.ceil(vectorStores.value.length / itemsPerVectorPageStore);
-    } catch (err) {
-      error.value = 'Failed to vector stores.';
-      console.error(err);
-    } finally {
-      loading.value = false;
-    }
-
-    console.log('Vector stores::', vectorStores);
-  });
+  const totalVectorStorePages = computed(() => Math.ceil(vectorStores.value.length / itemsPerVectorPageStore));
 
   function changeVectorStorePage(page) {
     currentVectorStorePage.value = page;
   }
   
-  // Pagination settings for Vector Files
-  const itemsPerVectorPageFile = 3;
-  const currentVectorFilePage = ref(1);
   const totalVectorFilePages = computed(() => Math.ceil(vectorFiles.value.length / itemsPerVectorPageFile));
   
   const paginatedVectorFiles = computed(() => {

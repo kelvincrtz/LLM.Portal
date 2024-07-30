@@ -20,4 +20,14 @@ export default {
       throw error; // Propagate the error back to the caller
     }
   },
+
+  async listVectorFiles() {
+    try {
+      const response = await $fetch(`${getBaseUrl()}/files`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching vector files:', error);
+      throw error; // Propagate the error back to the caller
+    }
+  },
 };

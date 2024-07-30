@@ -131,17 +131,17 @@
                 </div>
 
                 <div class="mt-2 space-x-2">
-                  <button @click="editAssistant(index + (currentPage - 1) * pageSize)" class="bg-yellow-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-yellow-700">
+                  <button @click="editAssistant(index + (currentPage - 1) * pageSizeAssistants)" class="bg-yellow-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-yellow-700">
                     Edit
                   </button>
 
-                  <button @click="deleteAssistant(index + (currentPage - 1) * pageSize)" class="ml-2 bg-red-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-red-700">
+                  <button @click="deleteAssistant(index + (currentPage - 1) * pageSizeAssistants)" class="ml-2 bg-red-500 text-white py-1 px-2 rounded-md shadow-sm hover:bg-red-700">
                     Delete
                   </button>
                 </div>
               </li>
             </ul>
-            <Pagination :total-pages="totalPages" :current-page="currentPage" @page-changed="gotoPage" />
+            <Pagination :total-pages="totalPagesAssistants" :current-page="currentPage" @page-changed="gotoPage" />
 
             <!-- Modal Component -->
             <Modal :file-id="selectedFileId" :is-visible="isModalVisible" @update:is-visible="isModalVisible = $event" />
@@ -176,7 +176,7 @@ const vectorStores = ref([]);
 const editingIndex = ref(-1);
 
 const currentPage = ref(1);
-const pageSize = ref(4);
+const pageSizeAssistants = ref(4);
 
 const currentPageVectorStore = ref(1);
 const pageSizeVectorStore = ref(4);
@@ -207,12 +207,12 @@ onMounted(async () => {
 });
 
 const paginatedAssistants = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
+  const start = (currentPage.value - 1) * pageSizeAssistants.value;
+  const end = start + pageSizeAssistants.value;
   return assistants.value.slice(start, end);
 });
 
-const totalPages = computed(() => Math.ceil(assistants.value.length / pageSize.value));
+const totalPagesAssistants = computed(() => Math.ceil(assistants.value.length / pageSizeAssistants.value));
 
 const paginatedVectorStores = computed(() => {
   const start = (currentPageVectorStore.value - 1) * pageSizeVectorStore.value;
