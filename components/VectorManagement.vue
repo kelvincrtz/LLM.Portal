@@ -37,24 +37,24 @@
             </button>
           </div>
         </div>
-  
+
         <!-- Vector Stores Content -->
         <div v-if="activeTab === 'stores'">
           <div v-if="vectorStores.length > 0">
             <div
               v-for="store in paginatedVectorStores"
               :key="store.id"
-              class="bg-white p-4 mb-4 border border-gray-300 rounded shadow-sm"
+              class="bg-white p-6 mb-4 rounded-lg shadow-lg transition-transform transform hover:scale-105"
             >
-              <h3 class="text-lg font-medium">{{ store.name }}</h3>
-              <p class="text-sm text-gray-600">ID: {{ store.id }}</p>
-              <p class="text-sm text-gray-600">Created at: {{ formatDate(store.createdAt) }}</p>
-              <p class="text-sm text-gray-600">Size: {{ formattedSize(store.bytes) }}</p>
-  
+              <h3 class="text-xl font-medium mb-2">{{ store.name }}</h3>
+              <p class="text-sm text-gray-600 mb-1">ID: {{ store.id }}</p>
+              <p class="text-sm text-gray-600 mb-1">Created at: {{ formatDate(store.createdAt) }}</p>
+              <p class="text-sm text-gray-600 mb-1">Size: {{ formattedSize(store.bytes) }}</p>
+
               <!-- Additional Information -->
               <div class="mt-4">
-                <h4 class="font-semibold">Files Attached:</h4>
-                <ul>
+                <h4 class="font-semibold mb-2">Files Attached:</h4>
+                <ul class="list-disc list-inside">
                   <li v-for="file in store.files" :key="file.id" class="text-sm text-gray-600">
                     {{ file.name }} ({{ file.type }})
                     <button @click="removeFile(store.id, file.id)" class="text-red-500 ml-2">Delete</button>
@@ -62,8 +62,8 @@
                 </ul>
               </div>
               <div class="mt-4">
-                <h4 class="font-semibold">Assistants Using This Store:</h4>
-                <ul>
+                <h4 class="font-semibold mb-2">Assistants Using This Store:</h4>
+                <ul class="list-disc list-inside">
                   <li v-for="assistant in store.assistants" :key="assistant.id" class="text-sm text-gray-600">
                     {{ assistant.name }}
                   </li>
@@ -81,45 +81,61 @@
             <p class="text-gray-600">No vector stores found.</p>
           </div>
         </div>
-  
+
         <!-- Vector Files Content -->
-        <div v-if="activeTab === 'files'">
-          <div v-if="vectorFiles.length > 0">
-            <div
-              v-for="file in paginatedVectorFiles"
-              :key="file.id"
-              class="bg-white p-4 mb-4 border border-gray-300 rounded shadow-sm"
-            >
-              <h3 class="text-lg font-medium">{{ file.filename }}</h3>
-              <p class="text-sm text-gray-600">ID: {{ file.id }}</p>
-              <p class="text-sm text-gray-600">Size: {{ formattedSize(file.bytes) }}</p>
-              <p class="text-sm text-gray-600">Created at: {{ formatDate(file.createdAt) }}</p>
-              <p class="text-sm text-gray-600">Purpose: {{ file.purpose }}</p>
-              <p class="text-sm text-gray-600">
-                Vector Store ID: {{ file.vectorStoreId || 'No Vector Store Id' }}
-              </p>
-              <button @click="deleteFile(file.id)" class="text-red-500 mt-2">Delete</button>
+        <div v-if="activeTab === 'files'" class="flex">
+          <!-- Left Side: List of Files -->
+          <div class="w-1/3 pr-4">
+            <div v-if="vectorFiles.length > 0">
+              <div
+                v-for="file in paginatedVectorFiles"
+                :key="file.id"
+                class="bg-white p-4 mb-4 rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-105"
+                @click="selectFile(file)"
+              >
+                <h3 class="text-lg font-medium mb-1">{{ file.filename }}</h3>
+                <p class="text-sm text-gray-600">Size: {{ formattedSize(file.bytes) }}</p>
+              </div>
+              <!-- Pagination Controls -->
+              <Pagination 
+                :current-page="currentVectorFilePage" 
+                :total-pages="totalVectorFilePages" 
+                @page-changed="changeVectorFilePage"
+              />
             </div>
-            <!-- Pagination Controls -->
-            <Pagination 
-              :current-page="currentVectorFilePage" 
-              :total-pages="totalVectorFilePages" 
-              @page-changed="changeVectorFilePage"
-            />
+            <div v-else>
+              <p class="text-gray-600">No vector files found.</p>
+            </div>
           </div>
-          <div v-else>
-            <p class="text-gray-600">No vector files found.</p>
+
+          <!-- Right Side: File Details -->
+          <div class="w-2/3 pl-4">
+            <div v-if="selectedFile" class="bg-white p-6 rounded-lg shadow-lg">
+              <h3 class="text-xl font-medium mb-2">{{ selectedFile.filename }}</h3>
+              <p class="text-sm text-gray-600 mb-1">ID: {{ selectedFile.id }}</p>
+              <p class="text-sm text-gray-600 mb-1">Size: {{ formattedSize(selectedFile.bytes) }}</p>
+              <p class="text-sm text-gray-600 mb-1">Created at: {{ formatDate(selectedFile.createdAt) }}</p>
+              <p class="text-sm text-gray-600 mb-1">Purpose: {{ selectedFile.purpose }}</p>
+              <p class="text-sm text-gray-600 mb-1">
+                Vector Store ID: {{ selectedFile.vectorStoreId || 'No Vector Store Id' }}
+              </p>
+              <button @click="deleteFile(selectedFile.id)" class="text-red-500 mt-2">Delete</button>
+            </div>
+            <div v-else>
+              <p class="text-gray-600">Select a file to see its details.</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </template>
+</template>
   <script setup>
   import { ref, computed, onMounted } from 'vue';
   import Pagination from './Pagination.vue';
   import VectorService from '@/services/VectorService';
   
   const activeTab = ref('stores');
+  const selectedFile = ref(null);
   
   const vectorStores = ref([]);
   const vectorFiles = ref([]);
@@ -129,7 +145,7 @@
   const currentVectorStorePage = ref(1);
 
   // Pagination settings for Vector Files
-  const itemsPerVectorPageFile = 6;
+  const itemsPerVectorPageFile = 10;
   const currentVectorFilePage = ref(1);
 
   const fetchVectorStores = async () => {
@@ -236,6 +252,12 @@
   const deleteFile = (fileId) => {
     vectorFiles.value = vectorFiles.value.filter(file => file.id !== fileId);
   };
+
+  // Method to select a file
+  const selectFile = (file) => {
+    selectedFile.value = file;
+  };
+
 
   // Utility function to format file size
   const formattedSize = (bytes) => {
