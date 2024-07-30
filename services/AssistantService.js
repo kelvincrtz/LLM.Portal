@@ -1,6 +1,9 @@
 // services/AssistantService.js
 let BASE_URL;
 
+const CACHE_KEY = 'assistants-cache';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 function getBaseUrl() {
   if (!BASE_URL) {
     const config = useRuntimeConfig();
@@ -13,8 +16,24 @@ function getBaseUrl() {
 export default {
   async getAllAssistants() {
     try {
+      // Check if the data is in localStorage and still valid
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const now = new Date().getTime();
+        if (now - timestamp < CACHE_DURATION) {
+          return data;
+        }
+      }
+
+      // Fetch new data if no valid cache is found
       const response = await $fetch(`${getBaseUrl()}/assistants`);
-      return response.data; // Assuming response.data is an array of assistants
+      const data = response.data;
+
+      // Store the new data in localStorage with a timestamp
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: new Date().getTime() }));
+
+      return data;
     } catch (error) {
       console.error('Error fetching assistants:', error);
       throw error; // Propagate the error back to the caller
