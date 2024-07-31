@@ -122,9 +122,9 @@
                 <div v-if="assistant.toolResources?.fileSearch?.vectorStoreIds?.length">
                   <h4 class="text-md font-medium mt-2">Vector store:</h4>
                   <ul class="list-disc pl-5 mt-1">
-                    <li v-for="(fileId, fileIndex) in assistant.toolResources.fileSearch.vectorStoreIds" :key="fileIndex">
-                      <button @click="showModal(fileId)" class="text-sm text-gray-500 hover:underline">
-                        {{ fileId }}
+                    <li v-for="(vectorStoreId, vectorStoreIndex) in assistant.toolResources.fileSearch.vectorStoreIds" :key="vectorStoreIndex">
+                      <button @click="showModal(vectorStoreId)" class="text-sm text-gray-500 hover:underline">
+                        {{ vectorStoreId }}
                       </button>
                     </li>
                   </ul>
@@ -147,7 +147,11 @@
             <Pagination :total-pages="totalPagesAssistants" :current-page="currentPage" @page-changed="gotoPage" />
 
             <!-- Modal Component -->
-            <Modal :file-id="selectedFileId" :is-visible="isModalVisible" @update:is-visible="isModalVisible = $event" />
+            <VectorStoreDetailsModal 
+              :fileId="selectedFileId" 
+              :isVisible="isModalVisible" 
+              @update:isVisible="isModalVisible = $event" 
+            />
           </div>
         </div>
       </div>
@@ -161,6 +165,7 @@ import Pagination from './Pagination.vue'; // Adjust path as necessary
 import AssistantService from '@/services/AssistantService'; // Adjust path as necessary
 import FileService from '@/services/FileService';
 import VectorService from '@/services/VectorService';
+import VectorStoreDetailsModal from './VectorStoreDetailsModal.vue'; // Adjust the import path as necessary
 
 const isModalVisible = ref(false);
 const selectedFileId = ref(null);
@@ -461,6 +466,10 @@ const cleanText = (text) => {
 const showModal = (fileId) => {
   selectedFileId.value = fileId;
   isModalVisible.value = true;
+};
+
+const hideModal = () => {
+  isModalVisible.value = false;
 };
 </script>
   
