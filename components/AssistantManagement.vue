@@ -242,14 +242,16 @@ const totalPagesVectorStore = computed(() => Math.ceil(vectorStores.value.length
 const submitForm = async () => {
   try {
     let uploadedFilesId = [];
+    let shouldUpdateFiles = false;
 
     if (form.value.files && form.value.files.length > 0) {
       console.log('Uploading files');
       // Upload files and expect a response containing the file IDs
       const response = await FileService.uploadFile(form.value.files);
       console.log('Uploaded files', response);
-      
+
       uploadedFilesId = response.id.split(',').map(id => id.trim());
+      shouldUpdateFiles = true;
     }
 
     const newAssistant = {
@@ -264,7 +266,7 @@ const submitForm = async () => {
       if (form.value.tools === 'file_search') {
         newAssistant.tool_resources = {
           file_search: {
-            vector_store_ids: uploadedFilesId // Use the array of IDs directly
+            vector_store_ids: shouldUpdateFiles ? uploadedFilesId : (form.value.vector_store_ids || [])
           }
         };
       }
@@ -283,8 +285,10 @@ const submitForm = async () => {
 
       // Check if there are changes in vector stores or files
       const originalAssistant = assistants.value[editingIndex.value];
-      const originalVectorStoreIds = originalAssistant.tool_resources?.file_search?.vector_store_ids || [];
-      const updatedVectorStoreIds = newAssistant.tool_resources?.file_search?.vector_store_ids || [];
+      const originalVectorStoreIds = originalAssistant.toolResources?.fileSearch?.vectorStoreIds || [];
+      const updatedVectorStoreIds = newAssistant.tool_resources?.file_search?.vector_store_ids || originalVectorStoreIds;
+
+      newAssistant.tool_resources.file_search.vector_store_ids = updatedVectorStoreIds;
 
       if (JSON.stringify(originalVectorStoreIds) !== JSON.stringify(updatedVectorStoreIds)) {
         shouldRefreshCaches = true;
@@ -339,14 +343,12 @@ const editAssistant = (index) => {
   form.value.name = assistant.name;
   form.value.instructions = assistant.instructions;
   form.value.model = assistant.model;
-  
-  //TODO: 
-  //form.value.files = assistant.toolResources?.fileSearch?.vectorStoreIds || [];
-  //form.value.tools = assistant.tools?.length ? assistant.tools[0].type : '';
+
+  form.value.vector_store_ids = assistant.toolResources?.fileSearch?.vectorStoreIds || [];
+  form.value.tools = assistant.tools?.length ? assistant.tools[0].type : '';
 
   editingIndex.value = index;
 };
-
 const deleteAssistant = async (index) => {
   try {
     const id = assistants.value[index].id;
@@ -360,8 +362,17 @@ const deleteAssistant = async (index) => {
 const clearForm = () => {
   form.value.name = '';
   form.value.instructions = '';
-  form.value.model = 'gpt-4o';
-  form.value.file = null;
+  form.value.model = '';
+  form.value.tools = '';
+  form.value.vector_store_ids = [];
+  form.value.files = [];
+
+  // Clear the file input element
+  const fileInput = document.querySelector('input[type="file"]');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+
   editingIndex.value = -1;
 };
 
