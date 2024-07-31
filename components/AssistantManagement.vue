@@ -224,12 +224,15 @@ const totalPagesVectorStore = computed(() => Math.ceil(vectorStores.value.length
 
 const submitForm = async () => {
   try {
-    let uploadedFiles = [];
+    let uploadedFilesId = [];
 
     if (form.value.files && form.value.files.length > 0) {
       console.log('Uploading files');
-      uploadedFiles = await FileService.uploadFile(form.value.files);
-      console.log('Uploaded files', uploadedFiles);
+      // Upload files and expect a response containing the file IDs
+      const response = await FileService.uploadFile(form.value.files);
+      console.log('Uploaded files', response);
+      
+      uploadedFilesId = response.id.split(',').map(id => id.trim());
     }
 
     const newAssistant = {
@@ -243,7 +246,7 @@ const submitForm = async () => {
       if (form.value.tools === 'file_search') {
         newAssistant.tool_resources = {
           file_search: {
-            vector_store_ids: uploadedFiles.id.split(',').map(id => id.trim())
+            vector_store_ids: uploadedFilesId // Use the array of IDs directly
           }
         };
       }
@@ -293,7 +296,14 @@ const clearForm = () => {
 };
 
 const handleFileChange = (event) => {
-  form.value.files = Array.from(event.target.files);
+  const files = event.target.files;
+  if (files.length > 0) {
+    // Preserve the selected files
+    form.value.files = Array.from(files);
+
+    // Automatically select "File Search" when a file is uploaded
+    form.value.tools = 'file_search';
+  }
 };
 
 const gotoPage = (page) => {
