@@ -255,7 +255,8 @@ const submitForm = async () => {
     const newAssistant = {
       name: form.value.name,
       instructions: form.value.instructions,
-      model: form.value.model
+      model: form.value.model,
+      tools: []
     };
 
     if (form.value.tools) {
@@ -269,18 +270,34 @@ const submitForm = async () => {
       }
     }
 
+    let assistantId;
+    let shouldRefreshCaches = false;
+
     if (editingIndex.value === -1) {
       console.log('Creating new assistant');
       await AssistantService.createAssistant(newAssistant);
+      shouldRefreshCaches = true; // Refresh caches for new assistants
     } else {
       console.log('Editing existing assistant');
-      const id = assistants.value[editingIndex.value].id;
-      await AssistantService.updateAssistant(id, newAssistant);
+      assistantId = assistants.value[editingIndex.value].id;
+
+      // Check if there are changes in vector stores or files
+      const originalAssistant = assistants.value[editingIndex.value];
+      const originalVectorStoreIds = originalAssistant.tool_resources?.file_search?.vector_store_ids || [];
+      const updatedVectorStoreIds = newAssistant.tool_resources?.file_search?.vector_store_ids || [];
+
+      if (JSON.stringify(originalVectorStoreIds) !== JSON.stringify(updatedVectorStoreIds)) {
+        shouldRefreshCaches = true;
+      }
+
+      await AssistantService.updateAssistant(assistantId, newAssistant);
     }
 
-    // Refresh vector caches
-    await refreshVectorStoresCache();
-    await refreshVectorStoreFilesCache();
+    if (shouldRefreshCaches) {
+      // Refresh vector caches
+      await refreshVectorStoresCache();
+      await refreshVectorStoreFilesCache();
+    }
 
     clearForm();
     await fetchAssistants();
@@ -316,6 +333,19 @@ const refreshVectorStoreFilesCache = async () => {
     console.error('Error refreshing vector stores cache:', error);
   }
 }
+
+const editAssistant = (index) => {
+  const assistant = assistants.value[index];
+  form.value.name = assistant.name;
+  form.value.instructions = assistant.instructions;
+  form.value.model = assistant.model;
+  
+  //TODO: 
+  //form.value.files = assistant.toolResources?.fileSearch?.vectorStoreIds || [];
+  //form.value.tools = assistant.tools?.length ? assistant.tools[0].type : '';
+
+  editingIndex.value = index;
+};
 
 const deleteAssistant = async (index) => {
   try {
