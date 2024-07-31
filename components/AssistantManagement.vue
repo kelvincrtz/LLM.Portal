@@ -31,6 +31,7 @@
                   v-model="form.instructions"
                   class="border border-gray-300 p-2 rounded w-full"
                   rows="4"
+                  required
                 ></textarea>
               </div>
 
@@ -60,6 +61,8 @@
 
               <div>
                 <label for="vectorStore" class="block mb-2 font-medium">Vector Stores</label>
+                <span class="text-blue-500 ml-2">{{ selectedVectorStoreName }}</span> <!-- Display the selected name -->
+
                 <div class="space-y-2">
                   <div
                     v-for="vectorStore in paginatedVectorStores"
@@ -186,6 +189,9 @@ const expandedInstructions = ref({});
 // cache
 const VECTOR_STORES_CACHE_KEY = 'vector-store-cache';
 const VECTOR_FILES_CACHE_KEY = 'vector-file-cache';
+
+const selectedVectorStoreName = ref(''); // reactive ref
+
 
 const fetchAssistants = async () => {
   try {
@@ -349,7 +355,14 @@ const gotoPageVectorStore = (page) => {
 };
 
 const selectVectorStore = (vectorStoreId) => {
-  form.value.vectorStore = vectorStoreId;
+  const selectedVectorStore = paginatedVectorStores.value.find(vs => vs.id === vectorStoreId);
+  if (selectedVectorStore) {
+    selectedVectorStoreName.value = selectedVectorStore.name; // Update the selected vector store name
+    // form.value.vectorStore = selectedVectorStoreId; // TODO: Store the selected vector store ID in the form
+  } else {
+    console.error('Vector store not found:', vectorStoreId);
+    selectedVectorStoreName.value = ''; // Clear the name if not found
+  }
 };
 
 const isJSON = (str) => {
