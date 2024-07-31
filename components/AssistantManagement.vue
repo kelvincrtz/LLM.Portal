@@ -183,6 +183,10 @@ const pageSizeVectorStore = ref(4);
 
 const expandedInstructions = ref({});
 
+// cache
+const VECTOR_STORES_CACHE_KEY = 'vector-store-cache';
+const VECTOR_FILES_CACHE_KEY = 'vector-file-cache';
+
 const fetchAssistants = async () => {
   try {
     assistants.value = await AssistantService.getAllAssistants();
@@ -194,10 +198,17 @@ const fetchAssistants = async () => {
 const fetchVectorStores = async () => {
   try {
     const response = await VectorService.listVectorStores();
-    console.log('Vector Stores:', response); // Log the response to verify structure
     vectorStores.value = response; // Adjust based on actual API response structure
   } catch (error) {
     console.error('Error fetching vector stores:', error);
+  }
+};
+
+const fetchVectorStoreFiles = async () => {
+  try {
+    await VectorService.listVectorFiles();
+  } catch (error) {
+    console.error('Error fetching vector store files:', error);
   }
 };
 
@@ -261,6 +272,10 @@ const submitForm = async () => {
       await AssistantService.updateAssistant(id, newAssistant);
     }
 
+    // Refresh vector caches
+    await refreshVectorStoresCache();
+    await refreshVectorStoreFilesCache();
+
     clearForm();
     await fetchAssistants();
   } catch (error) {
@@ -268,14 +283,33 @@ const submitForm = async () => {
   }
 };
 
-const editAssistant = (index) => {
-  editingIndex.value = index;
-  const assistant = assistants.value[index];
-  form.value.name = assistant.name;
-  form.value.instructions = assistant.instructions;
-  form.value.model = assistant.model;
-  form.value.file = null;
-};
+const refreshVectorStoresCache = async () => {
+  try {
+    console.log('Refreshing vector stores cache');
+    // Optionally, clear the cache if you want to force a fresh fetch
+    localStorage.removeItem(VECTOR_STORES_CACHE_KEY);
+    
+    // Fetch the new vector stores data
+    await fetchVectorStores();
+    console.log('Vector stores cache refreshed');
+  } catch (error) {
+    console.error('Error refreshing vector stores cache:', error);
+  }
+}
+
+const refreshVectorStoreFilesCache = async () => {
+  try {
+    console.log('Refreshing vector store files cache');
+    // Optionally, clear the cache if you want to force a fresh fetch
+    localStorage.removeItem(VECTOR_FILES_CACHE_KEY);
+    
+    // Fetch the new vector stores data
+    await fetchVectorStoreFiles();
+    console.log('Vector stores file cache refreshed');
+  } catch (error) {
+    console.error('Error refreshing vector stores cache:', error);
+  }
+}
 
 const deleteAssistant = async (index) => {
   try {
