@@ -100,9 +100,9 @@ import Pagination from './Pagination.vue';
 const PAGE_SIZE = 5;
 
 const initialThreads = [
-  { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Description of Thread 1 with data' },
-  { id: 'thread_ySUjQDaLklC3RPOjrDk7BT3q', name: 'About weather thread', description: 'Description of Thread 2 data' },
-  { id: 'thread_BsHPvqkm5MwlLiBagex4jGqz', name: 'About NZ weather', description: 'Description of Thread 3 data' },
+  { id: 'thread_q5N8EIG7wNaztUhPcnpLtCCA', name: 'Thread with data', description: 'Thread with JSON' },
+  { id: 'thread_ySUjQDaLklC3RPOjrDk7BT3q', name: 'About weather thread', description: 'Weather questions and facts' },
+  { id: 'thread_BsHPvqkm5MwlLiBagex4jGqz', name: 'About NZ weather', description: 'New Zealand weather info' },
 ];
 
 const newMessage = ref('');
