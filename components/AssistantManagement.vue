@@ -55,6 +55,7 @@
                   id="files"
                   multiple
                   @change="handleFileChange"
+                  :disabled="isVectorStoreSelected"
                   class="border border-gray-300 p-2 rounded w-full"
                 />
               </div>
@@ -67,7 +68,7 @@
                   <div
                     v-for="vectorStore in paginatedVectorStores"
                     :key="vectorStore.id"
-                    class="p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-100"
+                    :class="['p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-100', { 'bg-yellow-200': form.vectorStore === vectorStore.id }]"
                     @click="selectVectorStore(vectorStore.id)"
                   >
                     <h3 class="text-md font-semibold">{{ vectorStore.name }}</h3>
@@ -78,10 +79,10 @@
               </div>
               
               <Pagination
-                  :current-page="currentPageVectorStore"
-                  :total-pages="totalPagesVectorStore"
-                  @page-changed="gotoPageVectorStore"
-                />
+                :current-page="currentPageVectorStore"
+                :total-pages="totalPagesVectorStore"
+                @page-changed="gotoPageVectorStore"
+              />
 
               <div>
                 <label for="tools" class="block mb-2 font-medium">Tools</label>
@@ -177,7 +178,7 @@ const form = ref({
   model: 'gpt-4o',
   files: [],
   tools: '',
-  vectorStore: ''
+  vector_store_ids: []
 });
 
 const assistants = ref([]);
@@ -198,6 +199,7 @@ const VECTOR_FILES_CACHE_KEY = 'vector-file-cache';
 
 const selectedVectorStoreName = ref(''); // reactive ref
 
+let isVectorStoreSelected = ref(false);
 
 const fetchAssistants = async () => {
   try {
@@ -406,11 +408,16 @@ const gotoPageVectorStore = (page) => {
 const selectVectorStore = (vectorStoreId) => {
   const selectedVectorStore = paginatedVectorStores.value.find(vs => vs.id === vectorStoreId);
   if (selectedVectorStore) {
+    isVectorStoreSelected = true;
     selectedVectorStoreName.value = selectedVectorStore.name; // Update the selected vector store name
-    // form.value.vectorStore = selectedVectorStoreId; // TODO: Store the selected vector store ID in the form
+    form.value.vector_store_ids = [vectorStoreId]; // Store the selected vector store ID in the form
+    form.value.files = []; // Clear the files input when a vector store is selected
+    form.value.tools = 'file_search'; // Automatically select "File Search" when a vector store is selected
+    console.error('Form value:', form.value);
   } else {
     console.error('Vector store not found:', vectorStoreId);
     selectedVectorStoreName.value = ''; // Clear the name if not found
+    form.value.vector_store_ids = []; // Clear the vector store ID in the form
   }
 };
 
@@ -425,20 +432,6 @@ const isJSON = (str) => {
 
 const formatJSON = (str) => {
   return JSON.stringify(JSON.parse(str), null, 2);
-};
-
-const formatInstructions = (instructions) => {
-  const regex = /(\{.*\})/s;
-  const parts = instructions.split(regex);
-  return parts
-    .map(part => {
-      if (isJSON(part)) {
-        return `<pre>${JSON.stringify(JSON.parse(part), null, 2)}</pre>`;
-      } else {
-        return `<p>${part}</p>`;
-      }
-    })
-    .join('');
 };
 
 const toggleInstructions = (assistantId) => {
@@ -471,9 +464,6 @@ const showModal = (fileId) => {
   isModalVisible.value = true;
 };
 
-const hideModal = () => {
-  isModalVisible.value = false;
-};
 </script>
   
   <style scoped>
