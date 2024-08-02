@@ -68,7 +68,7 @@
                   <div
                     v-for="vectorStore in paginatedVectorStores"
                     :key="vectorStore.id"
-                    :class="['p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-100', { 'bg-yellow-200': form.vectorStore === vectorStore.id }]"
+                    :class="'p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-100'"
                     @click="selectVectorStore(vectorStore.id)"
                   >
                     <h3 class="text-md font-semibold">{{ vectorStore.name }}</h3>
@@ -348,17 +348,38 @@ const refreshVectorStoreFilesCache = async () => {
   }
 }
 
+const findVectorStoresNamesByIds = (ids) => {
+  return vectorStores.value
+    .filter(vs => ids.includes(vs.id))
+    .map(vs => vs.name);
+};
+
+const findVectorStoreIdsByIds = (ids) => {
+  return vectorStores.value
+    .filter(vs => ids.includes(vs.id))
+    .map(vs => vs.id);
+};
+
 const editAssistant = (index) => {
   const assistant = assistants.value[index];
   form.value.name = assistant.name;
   form.value.instructions = assistant.instructions;
   form.value.model = assistant.model;
 
-  form.value.vector_store_ids = assistant.toolResources?.fileSearch?.vectorStoreIds || [];
+  const vectorStoreIds = assistant.toolResources?.fileSearch?.vectorStoreIds || [];
+  if (vectorStoreIds)
+  {
+    form.value.vector_store_ids = findVectorStoreIdsByIds(vectorStoreIds);
+    const nameResults = findVectorStoresNamesByIds(vectorStoreIds);
+    selectedVectorStoreName.value = nameResults[0]; // TODO: we only get first value for the time being - improv this
+    isVectorStoreSelected = true; // turn flag on
+  }
   form.value.tools = assistant.tools?.length ? assistant.tools[0].type : '';
+  console.log('edit values:', form.value);
 
   editingIndex.value = index;
 };
+
 const deleteAssistant = async (index) => {
   try {
     const id = assistants.value[index].id;
@@ -382,6 +403,8 @@ const clearForm = () => {
   if (fileInput) {
     fileInput.value = '';
   }
+
+  selectedVectorStoreName.value = '';
 
   editingIndex.value = -1;
 };
