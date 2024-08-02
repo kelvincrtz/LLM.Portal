@@ -75,12 +75,13 @@
                     <p class="text-sm text-gray-500">Files: {{ vectorStore.fileCounts.total }}</p>
                   </div>
                 </div>
-                <Pagination
+              </div>
+              
+              <Pagination
                   :current-page="currentPageVectorStore"
                   :total-pages="totalPagesVectorStore"
                   @page-changed="gotoPageVectorStore"
                 />
-              </div>
 
               <div>
                 <label for="tools" class="block mb-2 font-medium">Tools</label>
@@ -246,66 +247,23 @@ const totalPagesVectorStore = computed(() => Math.ceil(vectorStores.value.length
 
 const submitForm = async () => {
   try {
-    let uploadedFilesId = [];
-    let shouldUpdateFiles = false;
+    const uploadedFilesId = await handleFileUpload();
+    const newAssistant = createNewAssistant(uploadedFilesId);
 
-    if (form.value.files && form.value.files.length > 0) {
-      console.log('Uploading files');
-      // Upload files and expect a response containing the file IDs
-      const response = await FileService.uploadFile(form.value.files);
-      console.log('Uploaded files', response);
+    const { isEditing, assistantId, originalVectorStoreIds } = getAssistantDetails();
+    const updatedVectorStoreIds = newAssistant.tool_resources?.file_search?.vector_store_ids || originalVectorStoreIds;
 
-      uploadedFilesId = response.id.split(',').map(id => id.trim());
-      shouldUpdateFiles = true;
-    }
+    newAssistant.tool_resources.file_search.vector_store_ids = updatedVectorStoreIds;
+    const shouldRefreshCaches = JSON.stringify(originalVectorStoreIds) !== JSON.stringify(updatedVectorStoreIds);
 
-    const newAssistant = {
-      name: form.value.name,
-      instructions: form.value.instructions,
-      model: form.value.model,
-      tools: []
-    };
-
-    if (form.value.tools) {
-      newAssistant.tools = [{ type: form.value.tools }];
-      if (form.value.tools === 'file_search') {
-        newAssistant.tool_resources = {
-          file_search: {
-            vector_store_ids: shouldUpdateFiles ? uploadedFilesId : (form.value.vector_store_ids || [])
-          }
-        };
-      }
-    }
-
-    let assistantId;
-    let shouldRefreshCaches = false;
-
-    if (editingIndex.value === -1) {
-      console.log('Creating new assistant');
-      await AssistantService.createAssistant(newAssistant);
-      shouldRefreshCaches = true; // Refresh caches for new assistants
-    } else {
-      console.log('Editing existing assistant');
-      assistantId = assistants.value[editingIndex.value].id;
-
-      // Check if there are changes in vector stores or files
-      const originalAssistant = assistants.value[editingIndex.value];
-      const originalVectorStoreIds = originalAssistant.toolResources?.fileSearch?.vectorStoreIds || [];
-      const updatedVectorStoreIds = newAssistant.tool_resources?.file_search?.vector_store_ids || originalVectorStoreIds;
-
-      newAssistant.tool_resources.file_search.vector_store_ids = updatedVectorStoreIds;
-
-      if (JSON.stringify(originalVectorStoreIds) !== JSON.stringify(updatedVectorStoreIds)) {
-        shouldRefreshCaches = true;
-      }
-
+    if (isEditing) {
       await AssistantService.updateAssistant(assistantId, newAssistant);
+    } else {
+      await AssistantService.createAssistant(newAssistant);
     }
 
     if (shouldRefreshCaches) {
-      // Refresh vector caches
-      await refreshVectorStoresCache();
-      await refreshVectorStoreFilesCache();
+      await refreshCaches();
     }
 
     clearForm();
@@ -313,6 +271,51 @@ const submitForm = async () => {
   } catch (error) {
     console.error('Error submitting form:', error);
   }
+};
+
+const handleFileUpload = async () => {
+  if (form.value.files && form.value.files.length > 0) {
+    console.log('Uploading files');
+    const response = await FileService.uploadFile(form.value.files);
+    console.log('Uploaded files', response);
+    return response.id.split(',').map(id => id.trim());
+  }
+  return [];
+};
+
+const createNewAssistant = (uploadedFilesId) => {
+  const newAssistant = {
+    name: form.value.name,
+    instructions: form.value.instructions,
+    model: form.value.model,
+    tools: []
+  };
+
+  if (form.value.tools) {
+    newAssistant.tools = [{ type: form.value.tools }];
+    if (form.value.tools === 'file_search') {
+      newAssistant.tool_resources = {
+        file_search: {
+          vector_store_ids: uploadedFilesId.length > 0 ? uploadedFilesId : (form.value.vector_store_ids || [])
+        }
+      };
+    }
+  }
+
+  return newAssistant;
+};
+
+const getAssistantDetails = () => {
+  const isEditing = editingIndex.value !== -1;
+  const assistantId = isEditing ? assistants.value[editingIndex.value].id : null;
+  const originalAssistant = isEditing ? assistants.value[editingIndex.value] : {};
+  const originalVectorStoreIds = originalAssistant.toolResources?.fileSearch?.vectorStoreIds || [];
+  return { isEditing, assistantId, originalVectorStoreIds };
+};
+
+const refreshCaches = async () => {
+  await refreshVectorStoresCache();
+  await refreshVectorStoreFilesCache();
 };
 
 const refreshVectorStoresCache = async () => {
